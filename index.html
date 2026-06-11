@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webild Clone - Accueil & Générateur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #fafafa; 
+            color: #111111; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+        }
+        .generator-card { 
+            background: #ffffff; 
+            width: 100%; 
+            max-width: 440px; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.05);
+            border: 1px solid #ededed;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="w-full bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="text-xl font-bold tracking-tight text-black flex items-center gap-2">
+                        <span>⚡</span> Webild Clone
+                    </a>
+                </div>
+
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#features" class="text-sm font-medium text-gray-600 hover:text-black transition-colors">Features</a>
+                    <a href="#faq" class="text-sm font-medium text-gray-600 hover:text-black transition-colors">FAQ</a>
+                    <a href="#templates" class="text-sm font-medium text-gray-600 hover:text-black transition-colors">Templates</a>
+                    <a href="#pricing" class="text-sm font-medium text-gray-600 hover:text-black transition-colors">Pricing</a>
+                    <a href="#docs" class="text-sm font-medium text-gray-600 hover:text-black transition-colors">Docs</a>
+                </nav>
+
+                <div id="authNavbarDesktop" class="hidden md:flex items-center space-x-4">
+                    <a href="/register?mode=login" class="text-sm font-medium text-gray-600 hover:text-black transition-colors">Log in</a>
+                    <a href="/register?mode=signup" class="text-sm font-medium bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-all shadow-sm hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+                        Get started
+                    </a>
+                </div>
+
+                <div class="flex md:hidden">
+                    <button id="mobileMenuBtn" type="button" class="text-gray-600 hover:text-black focus:outline-none" aria-label="Toggle menu">
+                        <svg class="h-6 width-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path id="burgerIcon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-b border-gray-100">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#features" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-black">Features</a>
+                <a href="#faq" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-black">FAQ</a>
+                <a href="#templates" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-black">Templates</a>
+                <a href="#pricing" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-black">Pricing</a>
+                <a href="#docs" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-black">Docs</a>
+                
+                <div id="authNavbarMobile" class="border-t border-gray-100 my-2 pt-2">
+                    <a href="/register?mode=login" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-black">Log in</a>
+                    <a href="/register?mode=signup" class="block mx-3 my-2 text-center text-base font-medium bg-black text-white px-4 py-2 rounded-lg">Get started</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="generator-card">
+            <div class="text-center mb-8">
+                <div class="font-bold text-[22px] tracking-tight mb-4 text-black">⚡ Webild Clone</div>
+                <h2 class="text-2xl font-semibold tracking-tight text-gray-950 mb-2">Générateur de Boutique</h2>
+                <p class="text-sm text-gray-500 leading-relaxed">Saisissez votre thématique et laissez l'IA concevoir votre site e-commerce sur-mesure.</p>
+            </div>
+            
+            <form id="generatorForm">
+                <div class="mb-5">
+                    <label for="theme" class="block text-xs font-medium mb-1.5 text-gray-700">De quoi parle votre site web ?</label>
+                    <input type="text" id="theme" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm bg-white text-black transition-all focus:border-black focus:ring-1 focus:ring-black outline-none" placeholder="Ex: Maillots de foot vintage, Lunettes en bois..." required>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full py-3 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-900 transition-colors disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">
+                    Générer mon site avec l'IA
+                </button>
+            </form>
+            
+            <div id="errorBox" class="text-rose-600 text-xs text-center mt-4 p-2.5 bg-rose-50 rounded-md hidden"></div>
+            <div id="loadingBox" class="text-center hidden text-sm font-medium text-gray-900 mt-5">Création des produits et de l'architecture par l'IA... ⏳</div>
+        </div>
+    </main>
+
+    <script>
+        // Configuration Supabase Client
+        const SUPABASE_URL = "https://spwrqwjhxjmnzszcstpm.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwd3Jxd2poeGptbnpzemNzdHBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMzA5NzksImV4cCI6MjA5NTkwNjk3OX0.PZKgsNZ0u0fPeSI_S5xd_AScoCKHfBQtceNZkXTTFtY";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const authDesktop = document.getElementById('authNavbarDesktop');
+        const authMobile = document.getElementById('authNavbarMobile');
+
+        // ÉCOUTER ET APPLIQUER LA SESSION UTILISATEUR
+        async function updateMenuBasedOnSession() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+
+            if (user) {
+                // Interface Connectée (Desktop)
+                authDesktop.innerHTML = `
+                    <span class="text-sm text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full font-medium">👤 ${user.email}</span>
+                    <button id="logoutBtnBtn" class="text-sm font-medium text-rose-600 hover:text-rose-700 transition-colors">Déconnexion</button>
+                `;
+                // Interface Connectée (Mobile)
+                authMobile.innerHTML = `
+                    <div class="px-3 py-2 text-sm text-gray-500 font-medium border-b border-gray-100 mb-2">Connecté : ${user.email}</div>
+                    <button id="logoutBtnMobile" class="block w-full text-left px-3 py-2 text-base font-medium text-rose-600 hover:bg-gray-50">Déconnexion</button>
+                `;
+
+                // Logique de déconnexion
+                const performLogout = async () => {
+                    await supabaseClient.auth.signOut();
+                    window.location.reload();
+                };
+
+                document.getElementById('logoutBtnBtn')?.addEventListener('click', performLogout);
+                document.getElementById('logoutBtnMobile')?.addEventListener('click', performLogout);
+            }
+        }
+
+        // Lancement au chargement
+        updateMenuBasedOnSession();
+
+        // Gestion interactive du Menu Mobile (Burger)
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const burgerIcon = document.getElementById('burgerIcon');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            const isHidden = mobileMenu.classList.toggle('hidden');
+            if (!isHidden) {
+                burgerIcon.setAttribute('d', 'M6 18L18 6M6 6l12 12');
+            } else {
+                burgerIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+            }
+        });
+
+        // Gestion de l'appel API FastAPI pour générer la boutique
+        document.getElementById('generatorForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const themeValue = document.getElementById('theme').value;
+            if(!themeValue) return;
+
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('loadingBox').style.display = 'block';
+            document.getElementById('errorBox').style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('theme', themeValue);
+
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error("Erreur lors de la génération. Vérifiez vos clés API ou la console Python.");
+
+                const htmlResult = await response.text();
+                
+                // Remplacement du contenu par la boutique générée
+                document.body.innerHTML = htmlResult;
+
+            } catch (err) {
+                document.getElementById('errorBox').innerText = "Erreur : " + err.message;
+                document.getElementById('errorBox').style.display = 'block';
+                document.getElementById('loadingBox').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
