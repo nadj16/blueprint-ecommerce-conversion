@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "E-commerce GA4 Tracking Schema",
+  "description": "Schéma de validation des événements e-commerce critiques pour le calcul du taux de conversion.",
+  "type": "object",
+  "required": [
+    "event_name",
+    "currency",
+    "value",
+    "items"
+  ],
+  "properties": {
+    "event_name": {
+      "type": "string",
+      "enum": [
+        "view_item",
+        "add_to_cart",
+        "view_cart",
+        "begin_checkout",
+        "purchase"
+      ]
+    },
+    "currency": {
+      "type": "string",
+      "default": "EUR"
+    },
+    "value": {
+      "type": "number",
+      "description": "Valeur totale de la transaction ou de l'élément ajouté"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "item_id",
+          "item_name",
+          "price",
+          "quantity"
+        ],
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "item_name": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "item_category": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

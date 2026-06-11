@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LA REVOLTOSA STYLE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 overflow-x-hidden">
+
+    <header class="border-b border-gray-200 bg-white sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <h1 class="text-xl font-bold tracking-wider text-gray-900 uppercase">LA REVOLTOSA</h1>
+            <nav class="flex items-center space-x-8 text-sm font-medium text-gray-600">
+                <a href="#" class="hidden md:block hover:text-black">Collection</a>
+                
+                <button onclick="toggleCart()" class="relative p-2 text-gray-600 hover:text-black focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    </svg>
+                    <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full hidden">0</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <div id="cart-drawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col border-l border-gray-200">
+        <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-gray-900">Mon Panier</h3>
+            <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-500 text-2xl font-bold">&times;</button>
+        </div>
+        
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">
+            <p class="text-gray-500 text-center py-8">Votre panier est vide.</p>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 bg-gray-50 space-y-4">
+            <div class="flex justify-between text-base font-medium text-gray-900">
+                <p>Total</p>
+                <p id="cart-total">0,00 €</p>
+            </div>
+            <button onclick="checkout()" class="w-full bg-black text-white text-center py-3 rounded-md font-medium hover:bg-gray-800 transition">
+                Passer la commande
+            </button>
+        </div>
+    </div>
+
+    <section class="relative bg-gray-900 text-white h-[50vh] flex items-center justify-center overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1600&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover opacity-40">
+        <div class="relative text-center px-4">
+            <h2 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">Nouvelle Saison</h2>
+            <p class="text-lg max-w-2xl mx-auto text-gray-200">Une sélection de pièces intemporelles et singulières.</p>
+        </div>
+    </section>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h3 class="text-2xl font-bold mb-8">Notre Sélection</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            
+            <div class="product-card group relative flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm p-4">
+                <div class="aspect-square bg-gray-200 overflow-hidden rounded-md group-hover:opacity-75 mb-4">
+                    <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop" class="product-img w-full h-full object-cover">
+                </div>
+                <div class="flex flex-col flex-1 justify-between">
+                    <div>
+                        <h4 class="product-name text-sm font-medium text-gray-900">Robe Midi Cintrée</h4>
+                        <p class="product-price text-sm font-semibold text-gray-900 mt-1">89,00 €</p>
+                    </div>
+                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-900 text-white text-xs py-2.5 rounded font-medium hover:bg-black transition">
+                        Ajouter au panier
+                    </button>
+                </div>
+            </div>
+
+            <div class="product-card group relative flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm p-4">
+                <div class="aspect-square bg-gray-200 overflow-hidden rounded-md group-hover:opacity-75 mb-4">
+                    <img src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=600&auto=format&fit=crop" class="product-img w-full h-full object-cover">
+                </div>
+                <div class="flex flex-col flex-1 justify-between">
+                    <div>
+                        <h4 class="product-name text-sm font-medium text-gray-900">Blazer Oversize Beige</h4>
+                        <p class="product-price text-sm font-semibold text-gray-900 mt-1">120,00 €</p>
+                    </div>
+                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-900 text-white text-xs py-2.5 rounded font-medium hover:bg-black transition">
+                        Ajouter au panier
+                    </button>
+                </div>
+            </div>
+
+            <div class="product-card group relative flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm p-4">
+                <div class="aspect-square bg-gray-200 overflow-hidden rounded-md group-hover:opacity-75 mb-4">
+                    <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=600&auto=format&fit=crop" class="product-img w-full h-full object-cover">
+                </div>
+                <div class="flex flex-col flex-1 justify-between">
+                    <div>
+                        <h4 class="product-name text-sm font-medium text-gray-900">Mules en Cuir Souple</h4>
+                        <p class="product-price text-sm font-semibold text-gray-900 mt-1">75,00 €</p>
+                    </div>
+                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-900 text-white text-xs py-2.5 rounded font-medium hover:bg-black transition">
+                        Ajouter au panier
+                    </button>
+                </div>
+            </div>
+
+            <div class="product-card group relative flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm p-4">
+                <div class="aspect-square bg-gray-200 overflow-hidden rounded-md group-hover:opacity-75 mb-4">
+                    <img src="https://images.unsplash.com/photo-1554412933-514a83d2f3c8?q=80&w=600&auto=format&fit=crop" class="product-img w-full h-full object-cover">
+                </div>
+                <div class="flex flex-col flex-1 justify-between">
+                    <div>
+                        <h4 class="product-name text-sm font-medium text-gray-900">Chemise en Lin Fluide</h4>
+                        <p class="product-price text-sm font-semibold text-gray-900 mt-1">65,00 €</p>
+                    </div>
+                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-900 text-white text-xs py-2.5 rounded font-medium hover:bg-black transition">
+                        Ajouter au panier
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        let cart = [];
+
+        function toggleCart() {
+            const drawer = document.getElementById('cart-drawer');
+            drawer.classList.toggle('translate-x-full');
+        }
+
+        function addToCart(button) {
+            const card = button.closest('.product-card');
+            const name = card.querySelector('.product-name').innerText;
+            const priceText = card.querySelector('.product-price').innerText;
+            const img = card.querySelector('.product-img').src;
+
+            const existingItem = cart.find(item => item.name === name);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ name, price: priceText, img, quantity: 1 });
+            }
+
+            updateCartUI();
+            document.getElementById('cart-drawer').classList.remove('translate-x-full');
+        }
+
+        function changeQuantity(index, delta) {
+            cart[index].quantity += delta;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            updateCartUI();
+        }
+
+        function removeItem(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function parsePrice(priceStr) {
+            let clean = priceStr.replace(/[^0-9.,]/g, '');
+            if (clean.includes(',') && clean.includes('.')) {
+                clean = clean.replace(/,/g, '');
+            } else if (clean.includes(',')) {
+                clean = clean.replace(',', '.');
+            }
+            return parseFloat(clean) || 0;
+        }
+
+        function updateCartUI() {
+            const itemsContainer = document.getElementById('cart-items');
+            const countBadge = document.getElementById('cart-count');
+            const totalContainer = document.getElementById('cart-total');
+
+            itemsContainer.innerHTML = '';
+            let totalPrice = 0;
+            let totalItems = 0;
+
+            cart.forEach((item, index) => {
+                const numericPrice = parsePrice(item.price);
+                totalPrice += numericPrice * item.quantity;
+                totalItems += item.quantity;
+
+                itemsContainer.innerHTML += `
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                        <div class="flex items-center space-x-4">
+                            <img src="${item.img}" class="w-16 h-16 object-cover rounded-md bg-gray-100">
+                            <div>
+                                <h5 class="text-sm font-semibold text-gray-900">${item.name}</h5>
+                                <p class="text-xs text-gray-500">${item.price}</p>
+                                <div class="flex items-center space-x-2 mt-2">
+                                    <button onclick="changeQuantity(${index}, -1)" class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs font-bold hover:bg-gray-200">-</button>
+                                    <span class="text-xs font-medium">${item.quantity}</span>
+                                    <button onclick="changeQuantity(${index}, 1)" class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs font-bold hover:bg-gray-200">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="removeItem(${index})" class="text-xs text-red-500 hover:text-red-700 underline">Enlever</button>
+                    </div>
+                `;
+            });
+
+            if (totalItems > 0) {
+                countBadge.innerText = totalItems;
+                countBadge.classList.remove('hidden');
+            } else {
+                countBadge.classList.add('hidden');
+                itemsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Votre panier est vide.</p>';
+            }
+
+            let currency = '€';
+            if (cart.length > 0 && cart[0].price.includes('$')) currency = '$';
+
+            totalContainer.innerText = totalPrice.toFixed(2).replace('.', ',') + ' ' + currency;
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                alert("Votre panier est vide !");
+                return;
+            }
+            alert("Félicitations ! Votre panier fonctionne à 100 %.");
+        }
+    </script>
+</body>
+</html>

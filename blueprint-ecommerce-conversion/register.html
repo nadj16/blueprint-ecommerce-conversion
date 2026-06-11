@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentification | Webild Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+
+    <div class="sm:mx-auto w-full max-w-md px-4">
+        <div class="flex justify-center text-3xl"><span>⚡</span></div>
+        <h2 id="authTitle" class="mt-4 text-center text-3xl font-bold tracking-tight text-slate-900">
+            Créer un compte
+        </h2>
+        <p class="mt-2 text-center text-sm text-slate-600">
+            <span id="switchText">Vous avez déjà un compte ?</span>
+            <button id="switchBtn" class="font-medium text-black hover:underline ml-1 focus:outline-none">
+                Se connecter
+            </button>
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto w-full max-w-md px-4">
+        <div class="bg-white py-10 px-4 shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/80 sm:rounded-xl sm:px-10">
+            
+            <div>
+                <button id="googleBtn" class="w-full inline-flex justify-center items-center gap-3 py-2.5 px-4 border border-slate-200 rounded-lg bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.12-.84 2.07-1.79 2.71v2.25h2.91c1.7-1.56 2.68-3.87 2.68-6.61z" fill="#4285F4"/>
+                        <path d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.25c-.81.54-1.85.87-3.05.87-2.34 0-4.33-1.58-5.04-3.71H.92v2.33C2.4 15.97 5.46 18 9 18z" fill="#34A853"/>
+                        <path d="M3.96 10.73A5.41 5.41 0 0 1 3.6 9c0-.6.1-1.19.27-1.73V4.94H.92A8.99 8.99 0 0 0 0 9c0 1.46.35 2.85.92 4.06l3.04-2.33z" fill="#FBBC05"/>
+                        <path d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.4A8.99 8.99 0 0 0 0 9l3.04 2.33C3.75 5.17 5.74 3.58 9 3.58z" fill="#EA4335"/>
+                    </svg>
+                    <span id="googleBtnText">S'inscrire avec Google</span>
+                </button>
+            </div>
+
+            <div class="mt-6 relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-slate-100"></div>
+                </div>
+                <div class="relative flex justify-center text-xs uppercase">
+                    <span class="bg-white px-3 text-slate-400 tracking-wider">ou par e-mail</span>
+                </div>
+            </div>
+
+            <form id="authForm" class="mt-6 space-y-5">
+                <div>
+                    <label for="email" class="block text-xs font-semibold text-slate-700 uppercase tracking-wide">Adresse e-mail</label>
+                    <div class="mt-1.5">
+                        <input id="email" type="email" required class="block w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all shadow-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-xs font-semibold text-slate-700 uppercase tracking-wide">Mot de passe</label>
+                    <div class="mt-1.5">
+                        <input id="password" type="password" required class="block w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm bg-white text-slate-900 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all shadow-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" id="submitBtn" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-black hover:bg-slate-900 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
+                        Créer mon compte
+                    </button>
+                </div>
+            </form>
+
+            <div id="statusBox" class="text-xs text-center mt-5 p-3 rounded-lg hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration de ton client Supabase
+        const SUPABASE_URL = "https://spwrqwjhxjmnzszcstpm.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwd3Jxd2poeGptbnpzemNzdHBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMzA5NzksImV4cCI6MjA5NTkwNjk3OX0.PZKgsNZ0u0fPeSI_S5xd_AScoCKHfBQtceNZkXTTFtY";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let isSignUpMode = true;
+
+        const authForm = document.getElementById('authForm');
+        const googleBtn = document.getElementById('googleBtn');
+        const googleBtnText = document.getElementById('googleBtnText');
+        const submitBtn = document.getElementById('submitBtn');
+        const authTitle = document.getElementById('authTitle');
+        const switchBtn = document.getElementById('switchBtn');
+        const switchText = document.getElementById('switchText');
+        const statusBox = document.getElementById('statusBox');
+
+        // Bascule visuelle et textuelle complète avec Tailwind injecté
+        function toggleMode(toLogin) {
+            isSignUpMode = !toLogin;
+            if (isSignUpMode) {
+                authTitle.innerText = "Créer un compte";
+                submitBtn.innerText = "Créer mon compte";
+                googleBtnText.innerText = "S'inscrire avec Google";
+                switchText.innerText = "Vous avez déjà un compte ?";
+                switchBtn.innerText = "Se connecter";
+            } else {
+                authTitle.innerText = "Bienvenue au retour";
+                submitBtn.innerText = "Se connecter";
+                googleBtnText.innerText = "Se connecter avec Google";
+                switchText.innerText = "Nouveau ici ?";
+                switchBtn.innerText = "Créer un compte";
+            }
+            statusBox.style.display = 'none';
+        }
+
+        switchBtn.addEventListener('click', (e) => { 
+            e.preventDefault(); 
+            toggleMode(isSignUpMode); 
+        });
+
+        // Lecture des paramètres de l'URL pour initialiser la vue (?mode=login)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('mode') === 'login') {
+            toggleMode(true);
+        }
+
+        // Gestion de la soumission du formulaire directement via Supabase
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            updateStatus("Traitement en cours... ⏳", "bg-slate-50 text-slate-700");
+
+            if (isSignUpMode) {
+                const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                if (error) {
+                    updateStatus("Erreur : " + error.message, "bg-rose-50 text-rose-600 border border-rose-100");
+                } else {
+                    updateStatus("Compte créé ! Vérifiez vos e-mails de confirmation. 📩", "bg-emerald-50 text-emerald-700 border border-emerald-100");
+                    authForm.reset();
+                }
+            } else {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) {
+                    updateStatus("Identifiants incorrects ou invalides.", "bg-rose-50 text-rose-600 border border-rose-100");
+                } else {
+                    updateStatus("Connexion réussie ! Redirection...", "bg-emerald-50 text-emerald-700 border border-emerald-100");
+                    setTimeout(() => window.location.href = "/", 1200);
+                }
+            }
+        });
+
+        // Gestion du clic OAuth Google
+        googleBtn.addEventListener('click', async () => {
+            await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: window.location.origin + "/" }
+            });
+        });
+
+        function updateStatus(msg, classes) {
+            statusBox.innerText = msg;
+            statusBox.className = `text-xs text-center mt-5 p-3 rounded-lg ${classes}`;
+            statusBox.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

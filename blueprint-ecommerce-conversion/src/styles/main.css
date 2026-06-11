@@ -1,0 +1,239 @@
+/* Réinitialisation de base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: #1c1c1c;
+    background-color: #fdfdfb; /* Fond légèrement cassé pour un effet premium */
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Bandeau d'annonce */
+.announcement-bar {
+    background-color: #1c1c1c;
+    color: #ffffff;
+    text-align: center;
+    padding: 8px 0;
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-weight: 500;
+}
+
+/* En-tête / Menu */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 50px;
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.nav-links a, .nav-icons a {
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-right: 25px;
+    font-weight: 400;
+    transition: opacity 0.3s;
+}
+
+.nav-links a:hover, .nav-icons a:hover {
+    opacity: 0.6;
+}
+
+.logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    letter-spacing: 6px;
+    font-weight: 400;
+}
+
+/* Section Hero (Bannière d'accueil) */
+.hero-section {
+    position: relative;
+    height: 80vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+.hero-section img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hero-content {
+    position: absolute;
+    bottom: 10%;
+    left: 5%;
+    color: #ffffff;
+}
+
+.hero-content span {
+    font-size: 12px;
+    letter-spacing: 3px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.hero-content h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 56px;
+    font-weight: 400;
+    margin-bottom: 25px;
+    line-height: 1.1;
+}
+
+.btn-primary {
+    display: inline-block;
+    padding: 14px 35px;
+    background-color: #ffffff;
+    color: #1c1c1c;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #1c1c1c;
+    color: #ffffff;
+}
+
+/* Conteneur principal */
+.container {
+    max-width: 1400px;
+    margin: 80px auto;
+    padding: 0 40px;
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.section-title h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 38px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.section-title p {
+    font-size: 14px;
+    color: #767676;
+    font-style: italic;
+}
+
+/* Grille de produits */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+}
+
+@media (max-width: 1024px) {
+    .product-grid { grid-template-columns: repeat(2, 1fr); }
+    .main-header { padding: 20px; }
+}
+
+@media (max-width: 600px) {
+    .product-grid { grid-template-columns: 1fr; }
+    .hero-content h1 { font-size: 40px; }
+}
+
+/* Cartes Produits */
+.product-card {
+    background: transparent;
+}
+
+.product-image {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    background-color: #f0f0f0;
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.product-card:hover .product-image img {
+    transform: scale(1.04);
+}
+
+/* Bouton ajout rapide au survol */
+.quick-add {
+    position: absolute;
+    bottom: 15px;
+    left: 5%;
+    width: 90%;
+    padding: 12px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border: none;
+    color: #1c1c1c;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 500;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+}
+
+.product-card:hover .quick-add {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.quick-add:hover {
+    background-color: #1c1c1c;
+    color: #ffffff;
+}
+
+/* Infos produit */
+.product-info {
+    padding: 15px 0;
+    text-align: left;
+}
+
+.product-info h3 {
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.product-info .price {
+    font-size: 14px;
+    font-weight: 500;
+    color: #555555;
+}
+
+/* Pied de page */
+.main-footer {
+    text-align: center;
+    padding: 60px 20px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    background-color: #f9f9f7;
+    font-size: 12px;
+    color: #8c8c8c;
+    letter-spacing: 1px;
+}
