@@ -110,23 +110,23 @@ async def generate_store(theme: str = Form(...)):
     
     4. BOUTON PANIER ET TÉLÉCHARGEMENT CÔTE À CÔTE (CRITIQUE) :
        - Dans ta barre de navigation (Navbar), tu dois placer le bouton du Panier (Shopping Cart).
-       - Juste à côté de ce bouton Panier (collé ou dans le même groupe d'actions visuel), tu DOIS ajouter un bouton de téléchargement premium stylisé selon ton thème (avec une icône de téléchargement ou un texte clair comme "📥 Télécharger le site").
+       - Juste à côté de ce bouton Panier, tu DOIS ajouter un bouton de téléchargement premium stylisé selon ton thème (avec une icône de téléchargement ou un texte clair comme "📥 Télécharger le site").
        - Ce bouton doit avoir l'id exact : "download-site-btn".
        - Ajoute obligatoirement ce script JavaScript tout à la fin du fichier avant la balise de fermeture </body> pour faire fonctionner le téléchargement :
          <script>
-         document.getElementById('download-site-btn')?.addEventListener('click', function(e) {
+         document.getElementById('download-site-btn')?.addEventListener('click', function(e) {{
              e.preventDefault();
              const htmlContent = document.documentElement.outerHTML;
-             const blob = new Blob([htmlContent], { type: 'text/html' });
+             const blob = new Blob([htmlContent], {{ type: 'text/html' }});
              const url = URL.createObjectURL(blob);
              const a = document.createElement('a');
              a.href = url;
-             a.download = 'ma_boutique_{theme.replace(' ', '_').lower()}.html';
+             a.download = 'ma_boutique.html';
              document.body.appendChild(a);
              a.click();
              document.body.removeChild(a);
              URL.revokeObjectURL(url);
-         });
+         }});
          </script>
 
     5. Ne fais JAMAIS une structure classique en blocs empilés basiques. Crée une mise en page asymétrique et immersive adaptée à la thématique "{theme}".
