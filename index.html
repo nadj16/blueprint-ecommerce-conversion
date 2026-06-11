@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webild Clone - Accueil & Générateur</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
@@ -113,31 +113,26 @@
     </main>
 
     <script>
-        // Configuration Supabase Client
-        const SUPABASE_URL = "https://spwrqwjhxjmnzszcstpm.supabase.co";
+        const SUPABASE_URL = "[https://spwrqwjhxjmnzszcstpm.supabase.co](https://spwrqwjhxjmnzszcstpm.supabase.co)";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwd3Jxd2poeGptbnpzemNzdHBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMzA5NzksImV4cCI6MjA5NTkwNjk3OX0.PZKgsNZ0u0fPeSI_S5xd_AScoCKHfBQtceNZkXTTFtY";
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const authDesktop = document.getElementById('authNavbarDesktop');
         const authMobile = document.getElementById('authNavbarMobile');
 
-        // ÉCOUTER ET APPLIQUER LA SESSION UTILISATEUR
         async function updateMenuBasedOnSession() {
             const { data: { user } } = await supabaseClient.auth.getUser();
 
             if (user) {
-                // Interface Connectée (Desktop)
                 authDesktop.innerHTML = `
                     <span class="text-sm text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full font-medium">👤 ${user.email}</span>
                     <button id="logoutBtnBtn" class="text-sm font-medium text-rose-600 hover:text-rose-700 transition-colors">Déconnexion</button>
                 `;
-                // Interface Connectée (Mobile)
                 authMobile.innerHTML = `
                     <div class="px-3 py-2 text-sm text-gray-500 font-medium border-b border-gray-100 mb-2">Connecté : ${user.email}</div>
                     <button id="logoutBtnMobile" class="block w-full text-left px-3 py-2 text-base font-medium text-rose-600 hover:bg-gray-50">Déconnexion</button>
                 `;
 
-                // Logique de déconnexion
                 const performLogout = async () => {
                     await supabaseClient.auth.signOut();
                     window.location.reload();
@@ -148,10 +143,8 @@
             }
         }
 
-        // Lancement au chargement
         updateMenuBasedOnSession();
 
-        // Gestion interactive du Menu Mobile (Burger)
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileMenu = document.getElementById('mobileMenu');
         const burgerIcon = document.getElementById('burgerIcon');
@@ -165,7 +158,6 @@
             }
         });
 
-        // Gestion de l'appel API FastAPI pour générer la boutique
         document.getElementById('generatorForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -180,17 +172,19 @@
                 const formData = new FormData();
                 formData.append('theme', themeValue);
 
-                const response = await fetch('https://blueprint-ecommerce-conversion.onrender.com/generate', {
+                const response = await fetch('[https://blueprint-ecommerce-conversion.onrender.com/generate](https://blueprint-ecommerce-conversion.onrender.com/generate)', {
                     method: 'POST',
                     body: formData
                 });
 
-                if (!response.ok) throw new Error("Erreur lors de la génération. Vérifiez vos clés API ou la console Python.");
+                if (!response.ok) throw new Error("Erreur lors de la génération par l'IA.");
 
                 const htmlResult = await response.text();
                 
-                // Remplacement du contenu par la boutique générée
-                document.body.innerHTML = htmlResult;
+                // Injection magique de la boutique sur tout l'écran
+                document.open();
+                document.write(htmlResult);
+                document.close();
 
             } catch (err) {
                 document.getElementById('errorBox').innerText = "Erreur : " + err.message;
