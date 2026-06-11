@@ -4,9 +4,19 @@ import httpx
 from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware  # AJOUT SÉCURITÉ CORS
 from supabase import create_client, Client
 
 app = FastAPI()
+
+# CONFIGURATION SÉCURITÉ CORS POUR AUTORISER GITHUB PAGES
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Autorise ton GitHub Pages à communiquer avec Render
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Configuration du dossier pour stocker la boutique finale
 os.makedirs("theme", exist_ok=True)
@@ -23,7 +33,6 @@ MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions"
 MODEL_NAME = "mistral-small-latest"
 THEME_PATH = os.path.join("theme", "index.html")
 
-# Utilisation de HTTPX Async pour ne JAMAIS bloquer le serveur
 async def call_mistral_agent_async(prompt: str, system_instruction: str) -> str:
     headers = {
         "Authorization": f"Bearer {MISTRAL_API_KEY}",
@@ -43,7 +52,6 @@ async def call_mistral_agent_async(prompt: str, system_instruction: str) -> str:
         return response.json()['choices'][0]['message']['content']
 
 
-# --- SERVIR LE FORMULAIRE DE DÉPART (index.html) ---
 @app.get("/", response_class=HTMLResponse)
 async def read_index():
     if not os.path.exists("index.html"):
@@ -52,7 +60,6 @@ async def read_index():
         return f.read()
 
 
-# --- SERVIR LA PAGE D'INSCRIPTION SEULE (register.html) ---
 @app.get("/register", response_class=HTMLResponse)
 async def get_register_page():
     if not os.path.exists("register.html"):
@@ -61,7 +68,6 @@ async def get_register_page():
         return f.read()
 
 
-# --- CORPS DE LA GÉNÉRATION IA ---
 @app.post("/generate")
 async def generate_store(theme: str = Form(...)):
     try:
@@ -93,6 +99,7 @@ async def generate_store(theme: str = Form(...)):
     CONSIGNES D'ARCHITECTURE HTML ET DE DESIGN :
     1. Inclus Tailwind CSS : <script src="https://cdn.tailwindcss.com"></script>
     2. Inclus la balise <script src="https://js.stripe.com/v3/"></script> dans le <head>.
+    
     3. FONCTIONNALITÉ COMPTE CONNECTÉ (OBLIGATOIRE) :
        - Inclus Supabase dans le <head> : <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
        - Dans le menu de navigation (Navbar) du site généré, crée une zone visible avec l'id "user-profile-zone".
@@ -100,10 +107,32 @@ async def generate_store(theme: str = Form(...)):
          URL : "{SUPABASE_URL}"
          KEY : "{SUPABASE_KEY}"
        - Ce script doit vérifier la session avec `supabase.auth.getUser()`. Si un utilisateur est connecté, remplace immédiatement le contenu de "user-profile-zone" par un badge stylisé affichant son adresse e-mail (ex: "👤 email@domaine.com") parfaitement intégré dans le thème graphique de la boutique.
-    4. Ne fais JAMAIS une structure classique en blocs empilés basiques. Crée une mise en page asymétrique et immersive adaptée à la thématique "{theme}".
-    5. Choisis une palette de couleurs digne d'un grand studio : des dégradés subtils, des effets de flou et de transparence haut de gamme (backdrop-blur-md), et des typographies soignées.
-    6. Pas d'images vides brutes : remplace les visuels des produits par des conteneurs <div> artistiques avec des dégradés abstraits ou des icônes minimalistes.
-    7. Inclus un système de panier d'achat interactif codé proprement en JavaScript (panneau coulissant ou modal).
+    
+    4. BOUTON PANIER ET TÉLÉCHARGEMENT CÔTE À CÔTE (CRITIQUE) :
+       - Dans ta barre de navigation (Navbar), tu dois placer le bouton du Panier (Shopping Cart).
+       - Juste à côté de ce bouton Panier (collé ou dans le même groupe d'actions visuel), tu DOIS ajouter un bouton de téléchargement premium stylisé selon ton thème (avec une icône de téléchargement ou un texte clair comme "📥 Télécharger le site").
+       - Ce bouton doit avoir l'id exact : "download-site-btn".
+       - Ajoute obligatoirement ce script JavaScript tout à la fin du fichier avant la balise de fermeture </body> pour faire fonctionner le téléchargement :
+         <script>
+         document.getElementById('download-site-btn')?.addEventListener('click', function(e) {
+             e.preventDefault();
+             const htmlContent = document.documentElement.outerHTML;
+             const blob = new Blob([htmlContent], { type: 'text/html' });
+             const url = URL.createObjectURL(blob);
+             const a = document.createElement('a');
+             a.href = url;
+             a.download = 'ma_boutique_{theme.replace(' ', '_').lower()}.html';
+             document.body.appendChild(a);
+             a.click();
+             document.body.removeChild(a);
+             URL.revokeObjectURL(url);
+         });
+         </script>
+
+    5. Ne fais JAMAIS une structure classique en blocs empilés basiques. Crée une mise en page asymétrique et immersive adaptée à la thématique "{theme}".
+    6. Choisis une palette de couleurs digne d'un grand studio : des dégradés subtils, des effets de flou et de transparence haut de gamme (backdrop-blur-md), et des typographies soignées.
+    7. Pas d'images vides brutes : remplace les visuels des produits par des conteneurs <div> artistiques avec des dégradés abstraits ou des icônes minimalistes.
+    8. Inclus un système de panier d'achat interactif codé proprement en JavaScript (panneau coulissant ou modal).
 
     Renvoie UNIQUEMENT le code HTML complet commençant par <!DOCTYPE html>. Pas de balises markdown ```html.
     """
@@ -113,34 +142,9 @@ async def generate_store(theme: str = Form(...)):
         final_html = await call_mistral_agent_async(prompt_gamma, system_gamma)
         final_html = final_html.replace("```html", "").replace("```", "").strip()
 
-        with open(THEME_PATH, "w", encoding="utf-8") as f:
-            f.write(final_html)
-            
-        # Génération d'une clé de version aléatoire pour éviter le cache du navigateur
-        anti_cache_version = os.urandom(4).hex()
-        # Formatage propre du nom de fichier pour le téléchargement
-        safe_filename = theme.replace(' ', '_').lower()
-
-        return HTMLResponse(content=f"""
-            <div style="font-family: -apple-system, sans-serif; max-width: 460px; margin: 80px auto; text-align: center; background: #ffffff; padding: 40px; border-radius: 12px; border: 1px solid #e0e0e0; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-                <h2 style="color: #111; font-size: 22px; font-weight: 600; margin-bottom: 12px; letter-spacing: -0.5px;">🎉 Version Pro Max Générée !</h2>
-                <p style="color: #666; font-size: 14px; margin-bottom: 24px; line-height: 1.5;">L'Agent Gamma a appliqué les standards UI/UX pour le thème : <strong>{theme}</strong>.</p>
-                
-                <p style="margin-bottom: 12px;">
-                    <a href="/static/index.html?v={anti_cache_version}" target="_blank" style="display: block; background: #000; color: #fff; padding: 12px; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        Voir ma boutique sur-mesure
-                    </a>
-                </p>
-
-                <p style="margin-bottom: 24px;">
-                    <a href="/static/index.html" download="ma_boutique_{safe_filename}.html" style="display: block; background: #f3f4f6; color: #1f2937; padding: 12px; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; border: 1px solid #e5e7eb; transition: background 0.2s;">
-                        📥 Télécharger le fichier HTML
-                    </a>
-                </p>
-
-                <a href="/" style="color: #666; font-size: 13px; text-decoration: none; font-weight: 500;">Créer un autre style</a>
-            </div>
-        """)
+        # Retourne directement le code HTML généré pour qu'index.html puisse l'injecter sur l'écran
+        return HTMLResponse(content=final_html, status_code=200)
+        
     except Exception as e:
         return JSONResponse(content={"error": f"Erreur lors de la génération par Gamma : {str(e)}"}, status_code=500)
 
