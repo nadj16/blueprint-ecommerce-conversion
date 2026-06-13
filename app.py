@@ -42,7 +42,7 @@ async def call_mistral_agent_async(prompt: str, system_instruction: str) -> str:
             {"role": "system", "content": system_instruction},
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.15  # Température très basse pour une correction chirurgicale et ultra-précise
+        "temperature": 0.15  # Température très basse pour bloquer la créativité et forcer la rigueur technique
     }
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(MISTRAL_URL, json=payload, headers=headers)
@@ -71,7 +71,8 @@ async def generate_store(theme: str = Form(...)):
         system_beta = "Tu es l'Agent Beta, expert en merchandising. Tu réponds UNIQUEMENT en JSON pur sans balises Markdown."
         res_beta_raw = await call_mistral_agent_async(prompt_beta, system_beta)
 
-        clean_alpha = res_alpha_raw.replace("```json", "").replace("```", "").strip()
+        clean_alpha = res_alpha_raw.replace("```json", "").replace("
+```", "").strip()
         clean_beta = res_beta_raw.replace("```json", "").replace("```", "").strip()
 
         brand_data = json.loads(clean_alpha)
@@ -80,7 +81,7 @@ async def generate_store(theme: str = Form(...)):
     except Exception as e:
         return JSONResponse(content={"error": "Échec lors du parsing IA des données de base", "details": str(e)}, status_code=500)
 
-    # 3. AGENT GAMMA : Développeur Front-End
+    # 3. AGENT GAMMA : Développeur Front-End (Avec instructions du panier d'achat)
     prompt_gamma = f"""
     Tu es un ingénieur Creative Front-End Senior. Tu dois concevoir un site e-commerce complet, ultra-moderne, premium et entièrement codé dans un seul fichier (index.html) pour la boutique "{brand_data.get('nom')}" basée sur la thématique spécifique : "{theme}".
     
@@ -89,10 +90,15 @@ async def generate_store(theme: str = Form(...)):
     - Message d'accueil : {brand_data.get('accueil')}
     - Les produits suivants : {json.dumps(products_data)}
     
-    CONSIGNES :
+    CONSIGNES STRICTES POUR LE PANIER, LE DESIGN ET LE TÉLÉCHARGEMENT :
     1. Inclus Tailwind CSS : <script src="https://cdn.tailwindcss.com"></script>
-    2. Dans la Navbar, ajoute un bouton avec l'id exact "download-site-btn" pour télécharger le site.
-    3. Ajoute ce script juste avant la fermeture du body pour activer le téléchargement :
+    2. CONSTRUIS UN PANIER D'ACHAT INTERACTIF EN JAVASCRIPT :
+       - Dans la Navbar, ajoute un bouton Panier bien visible avec un emoji caddie et un compteur de produits (ex: 🛒 Panier (0)).
+       - Crée une fenêtre de panier (un volet latéral coulissant ou une boîte modale bien stylisée, masquée par défaut).
+       - Chaque produit affiché doit posséder un bouton fonctionnel "Ajouter au panier".
+       - Écris le script JavaScript complet pour gérer ce panier : incrémentation du compteur au clic, liste des articles ajoutés à l'intérieur du volet, calcul automatique du prix total, et un bouton "Valider la commande".
+    3. Dans la Navbar, ajoute un bouton avec l'id exact "download-site-btn" pour télécharger le site.
+    4. Ajoute ce script juste avant la fermeture du body pour activer le téléchargement :
        <script>
        document.getElementById('download-site-btn')?.addEventListener('click', function(e) {{
            e.preventDefault();
@@ -106,40 +112,46 @@ async def generate_store(theme: str = Form(...)):
            document.body.removeChild(a);
        }});
        </script>
-    4. Rends le design magnifique, immersif et asymétrique. Pas de blocs basiques.
+    5. Rends le design magnifique, immersif, moderne et épuré.
 
     Renvoie UNIQUEMENT le code HTML complet commençant par <!DOCTYPE html>. Pas de balises markdown ```html.
     """
-    system_gamma = "Tu es un ingénieur Creative Front-End de génie, spécialisé dans les interfaces UI/UX minimalistes."
+    system_gamma = "Tu es un ingénieur Creative Front-End de génie, spécialisé dans les interfaces UI/UX minimalistes et le JavaScript fonctionnel."
     
     try:
         final_html = await call_mistral_agent_async(prompt_gamma, system_gamma)
-        final_html = final_html.replace("```html", "").replace("```", "").strip()
+        final_html = final_html.replace("
+```html", "").replace("```", "").strip()
 
-        # --- RE-VÉRIFICATION ET NETTOYAGE SYSTÉMATIQUE PAR L'AGENT DELTA ---
-        print("🔧 Activation de l'Agent Delta : Analyse et sécurisation multi-langages...")
+        # --- 4. AGENT DELTA : Super-Débugueur Polyglotte (Analyse systématique) ---
+        print("🔧 Activation de l'Agent Delta : Analyse et sécurisation multi-langages (HTML, CSS, JS, PHP, Python)...")
         
         prompt_delta = f"""
         Tu es l'Agent Delta, un ingénieur QA et débugueur Senior d'élite. Ton rôle est d'analyser, de réparer et d'optimiser le code fourni.
         Tu maîtrises à la perfection le HTML5, le CSS (Tailwind), le JavaScript (ES6+), le PHP 8+ et Python 3.
         
-        Inspecte le code ci-dessous et effectue les corrections suivantes si nécessaire :
+        CRITIQUE POUR LE DESIGN ET LE PANIER :
+        Tu DOIS impérativement vérifier que la ligne du CDN Tailwind est présente dans le <head> : <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>.
+        Assure-toi que les scripts du panier d'achat interactif et du bouton de téléchargement ('download-site-btn') ne contiennent aucune erreur de syntaxe JS (accolades, parenthèses ou variables brisées).
+        
+        Inspecte le code ci-dessous et effectue les corrections nécessaires :
         1. Répare les balises HTML mal fermées ou manquantes.
-        2. Assure-toi que le CSS Tailwind est correctement interprété.
-        3. Corrige les erreurs de syntaxe JavaScript (promesses, accolades manquantes, variables indéfinies).
-        4. Si des structures logiques ressemblant à du PHP ou du Python s'y trouvent, assure-toi qu'elles respectent scrupuleusement la syntaxe de leurs langages respectifs (indentation pour Python, balises <?php ?> et points-virgules pour PHP).
-        5. Interdiction absolue de casser ou supprimer le script du bouton de téléchargement ('download-site-btn').
+        2. Assure-toi que les classes Tailwind CSS sont bien orthographiées.
+        3. Corrige les erreurs de syntaxe JavaScript (promesses, fonctions mal fermées).
+        4. Si des structures logiques ressemblant à du PHP ou du Python s'y trouvent, assure-toi qu'elles respectent scrupuleusement leur syntaxe (indentation pour Python, balises <?php ?> et points-virgules pour PHP).
+        5. Interdiction absolue de supprimer ou casser le mécanisme du panier d'achat ou du bouton de téléchargement.
         
         Voici le code source à analyser et réparer :
         {final_html}
         
         Renvoie UNIQUEMENT le code corrigé final, sans fioritures, sans explications et sans bloc de code Markdown (pas de ```).
         """
-        system_delta = "Tu es un compilateur humain et un expert en refactoring de code. Tu répares le HTML, CSS, JS, PHP et Python sans jamais modifier le comportement attendu de l'application."
+        system_delta = "Tu es un compilateur humain et un expert en refactoring de code. Tu répares le HTML, CSS, JS, PHP et Python sans jamais altérer les fonctionnalités demandées."
         
-        # L'agent Delta nettoie systématiquement le code avant l'affichage pour garantir zéro bug
+        # L'agent Delta nettoie le code généré avant l'affichage pour garantir zéro bug
         final_html = await call_mistral_agent_async(prompt_delta, system_delta)
-        final_html = final_html.replace("```html", "").replace("```", "").strip()
+        final_html = final_html.replace("
+```html", "").replace("```", "").strip()
 
         return HTMLResponse(content=final_html, status_code=200)
         
