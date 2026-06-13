@@ -89,7 +89,7 @@ async def generate_store(theme: str = Form(...)):
     - Message d'accueil : {brand_data.get('accueil')}
     - Les produits suivants : {json.dumps(products_data)}
     
-    CONSIGNES CRITIQUES DE STRUCTURE DE LA NAVBAR, DU DRAWER ET DU JAVASCRIPT :
+    CONSIGNES CRITIQUES DE STRUCTURE ET DE SÉCURITÉ JAVASCRIPT :
     1. Inclus Tailwind CSS : <script src="https://cdn.tailwindcss.com"></script>
     
     2. IMAGES DES PRODUITS : Utilise de vraies belles images d'illustration issues d'Unsplash adaptées au thème "{theme}" via l'URL `https://images.unsplash.com/...`.
@@ -104,16 +104,17 @@ async def generate_store(theme: str = Form(...)):
        - À l'intérieur, inclus la zone des éléments : `<div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">`.
        - Inclus la zone du total avec le bouton valider : `<p id="cart-total">0,00 €</p>` et le bouton `<button onclick="checkout()" class="w-full bg-black text-white text-center py-3 rounded-md font-medium hover:bg-gray-800 transition">Passer la commande</button>`.
        
-    5. STRUCTURE DE CHAQUE CARTE PRODUIT :
-       Chaque produit généré doit être encapsulé dans une div avec la classe `product-card group relative flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm p-4`.
-       À l'intérieur, il doit y avoir obligatoirement les éléments avec les classes suivantes :
-       - La balise image : `class="product-img ..."`
-       - Le titre du produit : `class="product-name ..."`
-       - Le prix écrit : `class="product-price ..."`
-       - Le bouton d'ajout : `<button onclick="addToCart(this)" class="...">Ajouter au panier</button>`
+    5. STRUCTURE INTERDITE ET OBLIGATOIRE DE CHAQUE CARTE PRODUIT :
+       Il est STRICTEMENT INTERDIT de mettre un bouton "Voir détails". Chaque produit généré doit posséder UNIQUEMENT un bouton "Ajouter au panier".
+       Encapsule chaque produit dans une div avec la classe exacte `product-card group relative flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm p-4`.
+       À l'intérieur, place obligatoirement :
+       - La balise image avec la classe : `class="product-img ..."`
+       - Le titre du produit avec la classe : `class="product-name ..."`
+       - Le prix écrit avec la classe : `class="product-price ..."`
+       - Le bouton d'ajout exact : `<button onclick="addToCart(this)" class="mt-4 w-full bg-gray-900 text-white text-xs py-2.5 rounded font-medium hover:bg-black transition">Ajouter au panier</button>`
 
-    6. SÉCURITÉ JAVASCRIPT ET INTERDICTION :
-       Il est STRICTEMENT INTERDIT de déclarer des variables nommées `mobileMenuBtn` ou d'ajouter des scripts en doublon pour éviter les SyntaxError de redéclaration de variables. Tout le code doit résider dans un bloc de script unique.
+    6. LOGIQUE JAVASCRIPT NETTE (SANS REDÉCLARATION) :
+       Ne déclare aucun menu mobile complexe et n'utilise JAMAIS la variable `mobileMenuBtn`. Tout ton code doit tourner sans erreur de syntaxe.
 
     7. LOGIQUE JAVASCRIPT EXACTE DU PANIER ET DU TÉLÉCHARGEMENT :
        Inclus scrupuleusement ces fonctions de script avant la fermeture du body :
@@ -218,7 +219,7 @@ async def generate_store(theme: str = Form(...)):
        }});
        </script>
     """
-    system_gamma = "Tu es un ingénieur Creative Front-End de génie. Tu n'utilises JAMAIS de variables en doublon comme mobileMenuBtn."
+    system_gamma = "Tu es un ingénieur Creative Front-End de génie. Tu n'ajoutes JAMAIS de bouton Voir détails. Tu mets uniquement Ajouter au panier."
     
     try:
         final_html = await call_mistral_agent_async(prompt_gamma, system_gamma)
@@ -228,15 +229,16 @@ async def generate_store(theme: str = Form(...)):
         print("🔧 Activation de l'Agent Delta...")
         
         prompt_delta = f"""
-        Tu es l'Agent Delta, un ingénieur QA d'élite. Tu dois nettoyer le code HTML fourni.
-        INTERDICTION ABSOLUE de déclarer deux fois la même variable ou de laisser des scripts brisés. Supprime toute redéclaration de variable (comme mobileMenuBtn) qui fait crasher la console. Conserve à 100% les fonctions cart, addToCart, checkout et le bouton download-site-btn.
+        Tu es l'Agent Delta, un ingénieur QA d'élite. Tu dois valider le code HTML fourni.
+        Tu as l'interdiction de laisser un bouton 'Voir détails'. Modifie-le pour qu'il soit écrit 'Ajouter au panier' avec l'attribut onclick="addToCart(this)".
+        Supprime impérativement toute variable dupliquée ou script brisé. Conserve le système complet du panier et le bouton download-site-btn.
         
         Voici le code source à valider :
         {final_html}
         
         Renvoie uniquement le code HTML final corrigé, sans bloc markdown (pas de ```).
         """
-        system_delta = "Tu es un compilateur humain. Tu corriges les erreurs d'identifiants JavaScript déjà déclarés sans toucher aux fonctionnalités."
+        system_delta = "Tu es un débugueur intransigeant. Tu appliques les corrections de boutons et de variables à la lettre."
         
         final_html = await call_mistral_agent_async(prompt_delta, system_delta)
         final_html = final_html.replace("```html", "").replace("```", "").strip()
