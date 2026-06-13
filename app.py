@@ -42,7 +42,7 @@ async def call_mistral_agent_async(prompt: str, system_instruction: str) -> str:
             {"role": "system", "content": system_instruction},
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.15  # Température très basse pour la rigueur technique
+        "temperature": 0.15  # Rigueur technique maximale
     }
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(MISTRAL_URL, json=payload, headers=headers)
@@ -80,7 +80,7 @@ async def generate_store(theme: str = Form(...)):
     except Exception as e:
         return JSONResponse(content={"error": "Échec lors du parsing IA des données de base", "details": str(e)}, status_code=500)
 
-    # 3. AGENT GAMMA : Développeur Front-End (Version Alignée et JavaScript Sécurisé)
+    # 3. AGENT GAMMA : Développeur Front-End (Version Alignement Parfait des Boutons et Panier Blindé)
     prompt_gamma = f"""
     Tu es un ingénieur Creative Front-End Senior. Tu dois concevoir un site e-commerce complet, ultra-moderne, premium et entièrement codé dans un seul fichier (index.html) pour la boutique "{brand_data.get('nom')}" basée sur la thématique spécifique : "{theme}".
     
@@ -89,41 +89,37 @@ async def generate_store(theme: str = Form(...)):
     - Message d'accueil : {brand_data.get('accueil')}
     - Les produits suivants : {json.dumps(products_data)}
     
-    CONSIGNES CRITIQUES D'ALIGNEMENT, DU PANIER ET DE SÉCURITÉ JAVASCRIPT :
+    CONSIGNES CRITIQUES D'ALIGNEMENT DE LA NAVBAR & LOGIQUE :
     1. Inclus Tailwind CSS : <script src="https://cdn.tailwindcss.com"></script>
     
-    2. INTERDICTION DES IMAGES EXTERNES : N'utilise AUCUN lien d'image externe (pas de balise img pointant vers des placeholders qui provoquent des erreurs ERR_CONNECTION_CLOSED). À la place, représente chaque produit visuellement par un grand EMOJI très stylisé et centré au milieu d'un grand carré de couleur moderne et épuré en Tailwind CSS.
-    
-    3. STRUCTURE STRICTE DE LA NAVBAR :
-       Tout à droite de la barre de navigation, crée une div conteneur avec les classes Tailwind exactes : `flex items-center gap-4`.
-       À l'intérieur de cette div, place obligatoirement ces deux boutons de manière compacte :
-       - BOUTON PANIER : id exact "cart-btn", style moderne et compact (ex: `px-3 py-2 bg-gray-100 hover:bg-gray-200 text-black text-sm rounded-lg font-medium flex items-center gap-1`). Contenu : 🛒 Panier (<span id="cart-count">0</span>)
-       - BOUTON TÉLÉCHARGER : id exact "download-site-btn", même taille (ex: `px-3 py-2 bg-black hover:bg-gray-800 text-white text-sm rounded-lg font-medium flex items-center gap-1`). Contenu : 📥 Télécharger
+    2. STRUCTURE DE LA NAVBAR (ALIGNEMENT STRICT) :
+       Tout à droite de la barre de navigation, crée une div conteneur flex avec les classes Tailwind suivantes : `flex items-center gap-4`.
+       À l'intérieur de ce conteneur, place obligatoirement deux boutons distincts et compacts :
+       - BOUTON 1 : Le bouton panier avec l'id exact `cart-btn`. Style-le de manière moderne mais compacte (ex: `px-3 py-2 bg-gray-100 hover:bg-gray-200 text-black text-sm rounded-lg font-medium flex items-center gap-1`). Contenu : 🛒 Panier (<span id="cart-count">0</span>)
+       - BOUTON 2 : Le bouton télécharger avec l'id exact `download-site-btn`. Style-le de la même taille (ex: `px-3 py-2 bg-black hover:bg-gray-800 text-white text-sm rounded-lg font-medium flex items-center gap-1`). Contenu : 📥 Télécharger
 
+    3. INTERDICTION DES IMAGES EXTERNES : N'utilise AUCUN lien d'image externe (pas de balise img pointant vers des placeholders qui provoquent des erreurs ERR_CONNECTION_CLOSED). À la place, représente chaque produit visuellement par un grand EMOJI très stylisé et centré au milieu d'un carré de couleur moderne en Tailwind CSS.
+    
     4. LE PANIER D'ACHAT INTERACTIF :
-       - Crée un volet latéral pour le panier avec l'id exact "cart-sidebar" (ajoute la classe Tailwind "hidden" par défaut pour le masquer, et un z-index élevé `z-50`).
-       - IMPORTANT : À l'intérieur de ce volet "cart-sidebar", ajoute obligatoirement une div vide avec l'id exact "cart-items-container". C'est ici que le JavaScript injectera les produits.
-       - SÉCURITÉ CRITIQUE SUR LES BOUTONS : Chaque bouton de produit doit appeler la fonction de cette façon exacte : `onclick="addToCart(this.getAttribute('data-name'), this.getAttribute('data-price'))"`. Tu dois ajouter sur le bouton les attributs `data-name="NOM_DU_PRODUIT"` et `data-price="PRIX_NUMÉRIQUE"`. Cela empêchera les apostrophes du nom du produit de casser le JavaScript.
-       
-       - Inclus ce script JavaScript exact à la fin de ton code pour animer le panier :
+       - Crée un volet latéral pour le panier avec l'id exact "cart-sidebar" (ajoute la classe Tailwind "hidden" par défaut pour le masquer, et mets un z-index élevé `z-50`). Il doit contenir une div interne avec l'id exact "cart-items-container".
+       - Chaque bouton de produit doit posséder exactement cet attribut : onclick="addToCart('NOM_DU_PRODUIT', PRIX)" (remplace dynamiquement par le vrai nom du produit nettoyé et son prix numérique).
+       - Inclus ce script JavaScript exact à la fin de ton code pour faire fonctionner le panier :
          <script>
          let cart = [];
          function addToCart(name, price) {{
-             const numericPrice = parseFloat(price);
-             cart.push({{ name, price: numericPrice }});
+             cart.push({{ name, price }});
              document.getElementById('cart-count').innerText = cart.length;
              updateCartUI();
          }}
          function updateCartUI() {{
              const container = document.getElementById('cart-items-container');
-             if (!container) return;
              let html = '<h3 class="text-xl font-bold mb-4">Votre Panier</h3>';
              let total = 0;
              if (cart.length === 0) {{
                  html += '<p class="text-gray-500 text-sm">Votre panier est vide.</p>';
              }} else {{
                  cart.forEach(item => {{
-                     html += '<div class="flex justify-between border-b py-2 text-sm"><span>' + item.name + '</span><span class="font-bold">' + item.price.toFixed(2) + '€</span></div>';
+                     html += '<div class="flex justify-between border-b py-2 text-sm"><span>' + item.name + '</span><span class="font-bold">' + item.price + '€</span></div>';
                      total += item.price;
                  }});
              }}
@@ -134,7 +130,7 @@ async def generate_store(theme: str = Form(...)):
          }}
          function toggleCart() {{
              const sidebar = document.getElementById('cart-sidebar');
-             if (sidebar) sidebar.classList.toggle('hidden');
+             sidebar.classList.toggle('hidden');
          }}
          document.getElementById('cart-btn')?.addEventListener('click', toggleCart);
          </script>
@@ -157,7 +153,7 @@ async def generate_store(theme: str = Form(...)):
 
     Renvoie UNIQUEMENT le code HTML complet commençant par <!DOCTYPE html>. Pas de balises markdown ```html.
     """
-    system_gamma = "Tu es un ingénieur Creative Front-End de génie, spécialisé dans la mise en page robuste au pixel près avec Tailwind CSS et l'architecture JavaScript sans bugs."
+    system_gamma = "Tu es un ingénieur Creative Front-End de génie, spécialisé dans la mise en page au pixel près avec Tailwind CSS et le JavaScript interconnecté."
     
     try:
         final_html = await call_mistral_agent_async(prompt_gamma, system_gamma)
@@ -172,13 +168,14 @@ async def generate_store(theme: str = Form(...)):
         
         CRITIQUE POUR L'ALIGNEMENT DU DESIGN ET LE PANIER :
         Vérifie impérativement que les deux boutons ('cart-btn' et 'download-site-btn') coexistent côte à côte dans la barre de navigation à l'intérieur d'un conteneur flex (`flex items-center gap-4`), et qu'aucun ne masque l'autre.
-        Vérifie que la structure du panier comprend bien la div 'cart-items-container' et que les boutons de produits utilisent le système de dataset sécurisé `this.getAttribute('data-name')` pour éviter les plantages d'apostrophes.
         Vérifie que la ligne du CDN Tailwind est présente dans le <head> : <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>.
+        Assure-toi qu'aucune image cassée provoquant un plantage réseau n'est présente.
+        Vérifie que chaque bouton possède 'onclick="addToCart(...)"' et que la fonction correspondante 'function addToCart(name, price)' est présente et fonctionnelle.
         
         Inspecte le code ci-dessous et effectue les corrections nécessaires :
         1. Répare les balises HTML mal fermées ou manquantes.
         2. Assure-toi que les classes Tailwind CSS sont bien orthographiées.
-        3. Corrige les erreurs de syntaxe JavaScript (fonctions mal fermées, accolades manquantes).
+        3. Corrige les erreurs de syntaxe JavaScript (promesses, fonctions mal fermées, accolades manquantes).
         4. Si des structures logiques ressemblant à du PHP ou du Python s'y trouvent, assure-toi qu'elles respectent scrupuleusement leur syntaxe.
         5. Interdiction absolue de supprimer ou casser le mécanisme du panier d'achat ou du bouton de téléchargement ('download-site-btn').
         
