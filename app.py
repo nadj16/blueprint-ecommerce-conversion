@@ -97,7 +97,7 @@ async def generate_store(theme: str = Form(...)):
     3. STRUCTURE STRICTE DE LA NAVBAR :
        Dans l'en-tête de la page (`header`), tout à droite, crée un conteneur flex aligné : `flex items-center space-x-6`. À l'intérieur, place obligatoirement :
        - Le bouton de téléchargement : `<button id="download-site-btn" class="px-3 py-1.5 bg-black hover:bg-gray-800 text-white text-xs rounded font-medium transition">📥 Télécharger</button>`
-       - Le bouton panier icône : Un bouton avec `onclick="toggleCart()"` contenant le SVG du panier et le badge `<span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full hidden">0</span>`.
+       - Le bouton panier icône : Un bouton avec `onclick="toggleCart()"` contenant un SVG de panier et le badge `<span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full hidden">0</span>`.
 
     4. LE PANIER D'ACHAT INTERACTIF (DRAWER LATÉRAL) :
        - Ajoute la div du panier latéral : `<div id="cart-drawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col border-l border-gray-200">`.
@@ -112,13 +112,16 @@ async def generate_store(theme: str = Form(...)):
        - Le prix écrit : `class="product-price ..."`
        - Le bouton d'ajout : `<button onclick="addToCart(this)" class="...">Ajouter au panier</button>`
 
-    6. LOGIQUE JAVASCRIPT EXACTE DU PANIER ET DU TÉLÉCHARGEMENT :
+    6. SÉCURITÉ JAVASCRIPT ET INTERDICTION :
+       Il est STRICTEMENT INTERDIT de déclarer des variables nommées `mobileMenuBtn` ou d'ajouter des scripts en doublon pour éviter les SyntaxError de redéclaration de variables. Tout le code doit résider dans un bloc de script unique.
+
+    7. LOGIQUE JAVASCRIPT EXACTE DU PANIER ET DU TÉLÉCHARGEMENT :
        Inclus scrupuleusement ces fonctions de script avant la fermeture du body :
        <script>
        let cart = [];
        function toggleCart() {{
            const drawer = document.getElementById('cart-drawer');
-           drawer.classList.toggle('translate-x-full');
+           if(drawer) {{ drawer.classList.toggle('translate-x-full'); }}
        }}
        function addToCart(button) {{
            const card = button.closest('.product-card');
@@ -132,7 +135,8 @@ async def generate_store(theme: str = Form(...)):
                cart.push({{ name, price: priceText, img, quantity: 1 }});
            }}
            updateCartUI();
-           document.getElementById('cart-drawer').classList.remove('translate-x-full');
+           const drawer = document.getElementById('cart-drawer');
+           if(drawer) {{ drawer.classList.remove('translate-x-full'); }}
        }}
        function changeQuantity(index, delta) {{
            cart[index].quantity += delta;
@@ -146,13 +150,14 @@ async def generate_store(theme: str = Form(...)):
        function parsePrice(priceStr) {{
            let clean = priceStr.replace(/[^0-9.,]/g, '');
            if (clean.includes(',') && clean.includes('.')) {{ clean = clean.replace(/,/g, ''); }}
-           elif (clean.includes(',')) {{ clean = clean.replace(',', '.'); }}
+           else if (clean.includes(',')) {{ clean = clean.replace(',', '.'); }}
            return parseFloat(clean) || 0;
        }}
        function updateCartUI() {{
            const itemsContainer = document.getElementById('cart-items');
            const countBadge = document.getElementById('cart-count');
            const totalContainer = document.getElementById('cart-total');
+           if(!itemsContainer || !countBadge || !totalContainer) return;
            itemsContainer.innerHTML = '';
            let totalPrice = 0;
            let totalItems = 0;
@@ -163,18 +168,18 @@ async def generate_store(theme: str = Form(...)):
                itemsContainer.innerHTML += `
                    <div class="flex items-center justify-between border-b border-gray-100 pb-4">
                        <div class="flex items-center space-x-4">
-                           <img src="${{item.img}}" class="w-16 h-16 object-cover rounded-md bg-gray-100">
+                           <img src="\${{item.img}}" class="w-16 h-16 object-cover rounded-md bg-gray-100">
                            <div>
-                               <h5 class="text-sm font-semibold text-gray-900">${{item.name}}</h5>
-                               <p class="text-xs text-gray-500">${{item.price}}</p>
+                               <h5 class="text-sm font-semibold text-gray-900">\${{item.name}}</h5>
+                               <p class="text-xs text-gray-500">\${{item.price}}</p>
                                <div class="flex items-center space-x-2 mt-2">
-                                   <button onclick="changeQuantity(${{index}}, -1)" class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs font-bold hover:bg-gray-200">-</button>
-                                   <span class="text-xs font-medium">${{item.quantity}}</span>
-                                   <button onclick="changeQuantity(${{index}}, 1)" class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs font-bold hover:bg-gray-200">+</button>
+                                   <button onclick="changeQuantity(\${{index}}, -1)" class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs font-bold hover:bg-gray-200">-</button>
+                                   <span class="text-xs font-medium">\${{item.quantity}}</span>
+                                   <button onclick="changeQuantity(\${{index}}, 1)" class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs font-bold hover:bg-gray-200">+</button>
                                </div>
                            </div>
                        </div>
-                       <button onclick="removeItem(${{index}})" class="text-xs text-red-500 hover:text-red-700 underline">Enlever</button>
+                       <button onclick="removeItem(\${{index}})" class="text-xs text-red-500 hover:text-red-700 underline">Enlever</button>
                    </div>`;
            }});
            if (totalItems > 0) {{
@@ -200,7 +205,6 @@ async def generate_store(theme: str = Form(...)):
            .catch(e => {{ console.error(e); alert("Une erreur est survenue lors de la connexion avec Stripe."); }});
        }}
        
-       // Script pour le bouton de téléchargement local
        document.getElementById('download-site-btn')?.addEventListener('click', function(e) {{
            e.preventDefault();
            const blob = new Blob([document.documentElement.outerHTML], {{ type: 'text/html' }});
@@ -214,7 +218,7 @@ async def generate_store(theme: str = Form(...)):
        }});
        </script>
     """
-    system_gamma = "Tu es un ingénieur Creative Front-End de génie. Tu conçois des boutiques e-commerce élégantes avec une intégration de panier par classe et sélecteur JavaScript extrêmement précise."
+    system_gamma = "Tu es un ingénieur Creative Front-End de génie. Tu n'utilises JAMAIS de variables en doublon comme mobileMenuBtn."
     
     try:
         final_html = await call_mistral_agent_async(prompt_gamma, system_gamma)
@@ -224,19 +228,15 @@ async def generate_store(theme: str = Form(...)):
         print("🔧 Activation de l'Agent Delta...")
         
         prompt_delta = f"""
-        Tu es l'Agent Delta, un ingénieur QA et débugueur Senior d'élite. Tu dois nettoyer et valider le code HTML fourni.
-        Tu as l'interdiction absolue de supprimer ou de casser la logique du panier JavaScript (`cart`, `addToCart`, `updateCartUI`, `checkout` relié aux netlify functions) ou le fonctionnement du bouton de téléchargement local ('download-site-btn').
-        
-        Vérifie que :
-        1. Le bouton de téléchargement id "download-site-btn" et l'icône du panier coexistent harmonieusement dans la barre de navigation.
-        2. Le script JavaScript complet du panier et de redirection Stripe est conservé à 100%.
+        Tu es l'Agent Delta, un ingénieur QA d'élite. Tu dois nettoyer le code HTML fourni.
+        INTERDICTION ABSOLUE de déclarer deux fois la même variable ou de laisser des scripts brisés. Supprime toute redéclaration de variable (comme mobileMenuBtn) qui fait crasher la console. Conserve à 100% les fonctions cart, addToCart, checkout et le bouton download-site-btn.
         
         Voici le code source à valider :
         {final_html}
         
         Renvoie uniquement le code HTML final corrigé, sans bloc markdown (pas de ```).
         """
-        system_delta = "Tu es un compilateur humain et un expert en refactoring. Tu renvoies le code HTML brut de manière ultra-sécurisée."
+        system_delta = "Tu es un compilateur humain. Tu corriges les erreurs d'identifiants JavaScript déjà déclarés sans toucher aux fonctionnalités."
         
         final_html = await call_mistral_agent_async(prompt_delta, system_delta)
         final_html = final_html.replace("```html", "").replace("```", "").strip()
