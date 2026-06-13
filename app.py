@@ -42,7 +42,7 @@ async def call_mistral_agent_async(prompt: str, system_instruction: str) -> str:
             {"role": "system", "content": system_instruction},
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.15  # Rigueur technique maximale
+        "temperature": 0.15  # Température très basse pour bloquer la créativité et forcer la rigueur technique
     }
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(MISTRAL_URL, json=payload, headers=headers)
@@ -80,7 +80,7 @@ async def generate_store(theme: str = Form(...)):
     except Exception as e:
         return JSONResponse(content={"error": "Échec lors du parsing IA des données de base", "details": str(e)}, status_code=500)
 
-    # 3. AGENT GAMMA : Développeur Front-End (Version Alignement Parfait des Boutons et Panier Blindé)
+    # 3. AGENT GAMMA : Développeur Front-End (Avec instructions strictes pour la liaison du Panier)
     prompt_gamma = f"""
     Tu es un ingénieur Creative Front-End Senior. Tu dois concevoir un site e-commerce complet, ultra-moderne, premium et entièrement codé dans un seul fichier (index.html) pour la boutique "{brand_data.get('nom')}" basée sur la thématique spécifique : "{theme}".
     
@@ -89,53 +89,22 @@ async def generate_store(theme: str = Form(...)):
     - Message d'accueil : {brand_data.get('accueil')}
     - Les produits suivants : {json.dumps(products_data)}
     
-    CONSIGNES CRITIQUES D'ALIGNEMENT DE LA NAVBAR & LOGIQUE :
+    CONSIGNES STRICTES POUR LE PANIER, LE DESIGN ET LE TÉLÉCHARGEMENT :
     1. Inclus Tailwind CSS : <script src="https://cdn.tailwindcss.com"></script>
     
-    2. STRUCTURE DE LA NAVBAR (ALIGNEMENT STRICT) :
-       Tout à droite de la barre de navigation, crée une div conteneur flex avec les classes Tailwind suivantes : `flex items-center gap-4`.
-       À l'intérieur de ce conteneur, place obligatoirement deux boutons distincts et compacts :
-       - BOUTON 1 : Le bouton panier avec l'id exact `cart-btn`. Style-le de manière moderne mais compacte (ex: `px-3 py-2 bg-gray-100 hover:bg-gray-200 text-black text-sm rounded-lg font-medium flex items-center gap-1`). Contenu : 🛒 Panier (<span id="cart-count">0</span>)
-       - BOUTON 2 : Le bouton télécharger avec l'id exact `download-site-btn`. Style-le de la même taille (ex: `px-3 py-2 bg-black hover:bg-gray-800 text-white text-sm rounded-lg font-medium flex items-center gap-1`). Contenu : 📥 Télécharger
+    2. CONSTRUIS UN PANIER D'ACHAT INTERACTIF EN JAVASCRIPT (SANS ERREUR DE LOGIQUE) :
+       - Dans la Navbar, ajoute un bouton Panier avec l'id exact "cart-btn" qui affiche un emoji caddie et un compteur (ex: 🛒 Panier (<span id="cart-count">0</span>)).
+       - Crée un volet latéral coulissant pour le panier avec l'id exact "cart-sidebar" (masqué par défaut avec la classe Tailwind "hidden" ou "translate-x-full"). Ajoute un bouton à l'intérieur pour le fermer.
+       - Chaque bouton de produit doit impérativement avoir l'attribut exact : onclick="addToCart('Nom du Produit', Prix)" avec le vrai nom et le vrai prix du produit.
+       - Crée un script JavaScript global avec un tableau `let cart = [];` et la fonction exacte `function addToCart(name, price)` qui :
+         1. Ajoute le produit au tableau cart.
+         2. Incrémente le texte de `id="cart-count"`.
+         3. Met à jour la liste HTML des éléments à l'intérieur de `id="cart-sidebar"` pour afficher les articles ajoutés.
+         4. Calcule et affiche le total cumulé.
+       - Écris le script JavaScript pour que le clic sur `id="cart-btn"` ouvre le panier en manipulant sa classe (retirer "hidden"), et que le bouton de fermeture le masque à nouveau.
 
-    3. INTERDICTION DES IMAGES EXTERNES : N'utilise AUCUN lien d'image externe (pas de balise img pointant vers des placeholders qui provoquent des erreurs ERR_CONNECTION_CLOSED). À la place, représente chaque produit visuellement par un grand EMOJI très stylisé et centré au milieu d'un carré de couleur moderne en Tailwind CSS.
-    
-    4. LE PANIER D'ACHAT INTERACTIF :
-       - Crée un volet latéral pour le panier avec l'id exact "cart-sidebar" (ajoute la classe Tailwind "hidden" par défaut pour le masquer, et mets un z-index élevé `z-50`). Il doit contenir une div interne avec l'id exact "cart-items-container".
-       - Chaque bouton de produit doit posséder exactement cet attribut : onclick="addToCart('NOM_DU_PRODUIT', PRIX)" (remplace dynamiquement par le vrai nom du produit nettoyé et son prix numérique).
-       - Inclus ce script JavaScript exact à la fin de ton code pour faire fonctionner le panier :
-         <script>
-         let cart = [];
-         function addToCart(name, price) {{
-             cart.push({{ name, price }});
-             document.getElementById('cart-count').innerText = cart.length;
-             updateCartUI();
-         }}
-         function updateCartUI() {{
-             const container = document.getElementById('cart-items-container');
-             let html = '<h3 class="text-xl font-bold mb-4">Votre Panier</h3>';
-             let total = 0;
-             if (cart.length === 0) {{
-                 html += '<p class="text-gray-500 text-sm">Votre panier est vide.</p>';
-             }} else {{
-                 cart.forEach(item => {{
-                     html += '<div class="flex justify-between border-b py-2 text-sm"><span>' + item.name + '</span><span class="font-bold">' + item.price + '€</span></div>';
-                     total += item.price;
-                 }});
-             }}
-             html += '<div class="mt-4 font-bold text-lg">Total: ' + total.toFixed(2) + '€</div>';
-             html += '<button class="w-full mt-4 bg-black text-white py-2 rounded text-sm font-medium">Valider la commande</button>';
-             html += '<button onclick="toggleCart()" class="w-full mt-2 text-xs text-gray-400 hover:text-black">Fermer le panier</button>';
-             container.innerHTML = html;
-         }}
-         function toggleCart() {{
-             const sidebar = document.getElementById('cart-sidebar');
-             sidebar.classList.toggle('hidden');
-         }}
-         document.getElementById('cart-btn')?.addEventListener('click', toggleCart);
-         </script>
-
-    5. Ajoute ce script juste avant la fermeture du body pour activer le téléchargement :
+    3. Dans la Navbar, ajoute un bouton avec l'id exact "download-site-btn" pour télécharger le site.
+    4. Ajoute ce script juste avant la fermeture du body pour activer le téléchargement :
        <script>
        document.getElementById('download-site-btn')?.addEventListener('click', function(e) {{
            e.preventDefault();
@@ -149,34 +118,34 @@ async def generate_store(theme: str = Form(...)):
            document.body.removeChild(a);
        }});
        </script>
-    6. Rends le design magnifique, immersif et épuré.
+    5. Rends le design magnifique, immersif, moderne et épuré.
 
     Renvoie UNIQUEMENT le code HTML complet commençant par <!DOCTYPE html>. Pas de balises markdown ```html.
     """
-    system_gamma = "Tu es un ingénieur Creative Front-End de génie, spécialisé dans la mise en page au pixel près avec Tailwind CSS et le JavaScript interconnecté."
+    system_gamma = "Tu es un ingénieur Creative Front-End de génie, spécialisé dans les interfaces UI/UX minimalistes et le JavaScript fonctionnel interconnecté."
     
     try:
         final_html = await call_mistral_agent_async(prompt_gamma, system_gamma)
         final_html = final_html.replace("```html", "").replace("```", "").strip()
 
-        # --- 4. AGENT DELTA : Super-Débugueur Polyglotte ---
+        # --- 4. AGENT DELTA : Super-Débugueur Polyglotte (Analyse de la liaison) ---
         print("🔧 Activation de l'Agent Delta : Analyse et sécurisation multi-langages (HTML, CSS, JS, PHP, Python)...")
         
         prompt_delta = f"""
         Tu es l'Agent Delta, un ingénieur QA et débugueur Senior d'élite. Ton rôle est d'analyser, de réparer et d'optimiser le code fourni.
         Tu maîtrises à la perfection le HTML5, le CSS (Tailwind), le JavaScript (ES6+), le PHP 8+ et Python 3.
         
-        CRITIQUE POUR L'ALIGNEMENT DU DESIGN ET LE PANIER :
-        Vérifie impérativement que les deux boutons ('cart-btn' et 'download-site-btn') coexistent côte à côte dans la barre de navigation à l'intérieur d'un conteneur flex (`flex items-center gap-4`), et qu'aucun ne masque l'autre.
-        Vérifie que la ligne du CDN Tailwind est présente dans le <head> : <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>.
-        Assure-toi qu'aucune image cassée provoquant un plantage réseau n'est présente.
-        Vérifie que chaque bouton possède 'onclick="addToCart(...)"' et que la fonction correspondante 'function addToCart(name, price)' est présente et fonctionnelle.
+        CRITIQUE POUR LE DESIGN ET LE PANIER :
+        Tu DOIS impérativement vérifier que la ligne du CDN Tailwind est présente dans le <head> : <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>.
+        
+        VÉRIFICATION DU PANIER :
+        Assure-toi que chaque bouton de produit possède bien l'attribut 'onclick="addToCart(...)"' et que la fonction correspondante 'function addToCart(name, price)' est présente, complète et fonctionnelle dans le JavaScript. Si les noms de fonctions ou les IDs de concordance ne correspondent pas, renomme-les pour qu'ils soient strictement identiques et fonctionnels au clic.
         
         Inspecte le code ci-dessous et effectue les corrections nécessaires :
         1. Répare les balises HTML mal fermées ou manquantes.
         2. Assure-toi que les classes Tailwind CSS sont bien orthographiées.
         3. Corrige les erreurs de syntaxe JavaScript (promesses, fonctions mal fermées, accolades manquantes).
-        4. Si des structures logiques ressemblant à du PHP ou du Python s'y trouvent, assure-toi qu'elles respectent scrupuleusement leur syntaxe.
+        4. Si des structures logiques ressemblant à du PHP ou du Python s'y trouvent, assure-toi qu'elles respectent scrupuleusement leur syntaxe (indentation pour Python, balises <?php ?> et points-virgules pour PHP).
         5. Interdiction absolue de supprimer ou casser le mécanisme du panier d'achat ou du bouton de téléchargement ('download-site-btn').
         
         Voici le code source à analyser et réparer :
@@ -186,6 +155,7 @@ async def generate_store(theme: str = Form(...)):
         """
         system_delta = "Tu es un compilateur humain et un expert en refactoring de code. Tu répares le HTML, CSS, JS, PHP et Python sans jamais altérer les fonctionnalités interactives demandées."
         
+        # L'agent Delta nettoie le code généré avant l'affichage pour garantir zéro bug
         final_html = await call_mistral_agent_async(prompt_delta, system_delta)
         final_html = final_html.replace("```html", "").replace("```", "").strip()
 
