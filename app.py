@@ -67,7 +67,7 @@ async def generate_store(theme: str = Form(...)):
         res_alpha_raw = await call_mistral_agent_async(prompt_alpha, system_alpha)
         
         # 2. AGENT BETA : Merchandising
-        prompt_beta = f"Génère une liste de 3 produits parfaits pour le thème : {theme}. Donne un nom, un prix et une courte description. Réponds en JSON pur (une liste d'objets) sans balises Markdown."
+        prompt_beta = f"Génère une liste de 4 produits parfaits et pertinents pour le thème : {theme}. Donne un nom, un prix (ex: '95,00 €') et une courte description. Réponds en JSON pur (une liste d'objets) sans balises Markdown."
         system_beta = "Tu es l'Agent Beta, expert en merchandising. Tu réponds UNIQUEMENT en JSON pur sans balises Markdown."
         res_beta_raw = await call_mistral_agent_async(prompt_beta, system_beta)
 
@@ -82,65 +82,125 @@ async def generate_store(theme: str = Form(...)):
 
     # 3. AGENT GAMMA : Développeur Front-End
     prompt_gamma = f"""
-    Tu es un ingénieur Creative Front-End Senior. Tu dois concevoir un site e-commerce complet, ultra-moderne, premium et entièrement codé dans un seul fichier (index.html) pour la boutique "{brand_data.get('nom')}" basée sur la thématique spécifique : "{theme}".
+    Tu es un ingénieur Creative Front-End Senior. Tu dois concevoir un site e-commerce complet, premium, minimaliste et entièrement codé dans un seul fichier (index.html) pour la boutique "{brand_data.get('nom')}" basée sur la thématique spécifique : "{theme}".
     
     Données à inclure obligatoirement :
     - Slogan : {brand_data.get('slogan')}
     - Message d'accueil : {brand_data.get('accueil')}
     - Les produits suivants : {json.dumps(products_data)}
     
-    CONSIGNES CRITIQUES D'ALIGNEMENT, DU PANIER ET DE SÉCURITÉ JAVASCRIPT :
+    CONSIGNES CRITIQUES DE STRUCTURE DE LA NAVBAR, DU DRAWER ET DU JAVASCRIPT :
     1. Inclus Tailwind CSS : <script src="https://cdn.tailwindcss.com"></script>
     
-    2. INTERDICTION DES IMAGES EXTERNES : Représente chaque produit visuellement par un grand EMOJI très stylisé et centré au milieu d'un grand carré de couleur moderne et épuré en Tailwind CSS.
+    2. IMAGES DES PRODUITS : Utilise de vraies belles images d'illustration issues d'Unsplash adaptées au thème "{theme}" via l'URL `https://images.unsplash.com/...`.
     
     3. STRUCTURE STRICTE DE LA NAVBAR :
-       Tout à droite de la barre de navigation, crée une div conteneur : `flex items-center gap-4`.
-       À l'intérieur, place obligatoirement ces deux boutons :
-       - BOUTON PANIER : id exact "cart-btn", style : `px-3 py-2 bg-gray-100 hover:bg-gray-200 text-black text-sm rounded-lg font-medium flex items-center gap-1`. Contenu : 🛒 Panier (<span id="cart-count">0</span>)
-       - BOUTON TÉLÉCHARGER : id exact "download-site-btn", style : `px-3 py-2 bg-black hover:bg-gray-800 text-white text-sm rounded-lg font-medium flex items-center gap-1`. Contenu : 📥 Télécharger
+       Dans l'en-tête de la page (`header`), tout à droite, crée un conteneur flex aligné : `flex items-center space-x-6`. À l'intérieur, place obligatoirement :
+       - Le bouton de téléchargement : `<button id="download-site-btn" class="px-3 py-1.5 bg-black hover:bg-gray-800 text-white text-xs rounded font-medium transition">📥 Télécharger</button>`
+       - Le bouton panier icône : Un bouton avec `onclick="toggleCart()"` contenant le SVG du panier et le badge `<span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full hidden">0</span>`.
 
-    4. LE PANIER D'ACHAT INTERACTIF :
-       - Crée un volet latéral pour le panier avec l'id exact "cart-sidebar" (classe Tailwind "hidden" par défaut, z-index `z-50`).
-       - À l'intérieur, ajoute une div vide avec l'id exact "cart-items-container".
-       - Chaque bouton de produit doit posséder exactement cet attribut : `onclick="addToCart(this.getAttribute('data-name'), this.getAttribute('data-price'))"`. Ajoute sur le bouton les attributs `data-name="NOM_DU_PRODUIT"` and `data-price="PRIX_NUMÉRIQUE"`.
+    4. LE PANIER D'ACHAT INTERACTIF (DRAWER LATÉRAL) :
+       - Ajoute la div du panier latéral : `<div id="cart-drawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col border-l border-gray-200">`.
+       - À l'intérieur, inclus la zone des éléments : `<div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">`.
+       - Inclus la zone du total avec le bouton valider : `<p id="cart-total">0,00 €</p>` et le bouton `<button onclick="checkout()" class="w-full bg-black text-white text-center py-3 rounded-md font-medium hover:bg-gray-800 transition">Passer la commande</button>`.
        
-       - Inclus ce script JavaScript exact à la fin de ton code :
-         <script>
-         let cart = [];
-         function addToCart(name, price) {{
-             const numericPrice = parseFloat(price);
-             cart.push({{ name, price: numericPrice }});
-             document.getElementById('cart-count').innerText = cart.length;
-             updateCartUI();
-         }}
-         function updateCartUI() {{
-             const container = document.getElementById('cart-items-container');
-             if (!container) return;
-             let html = '<h3 class="text-xl font-bold mb-4">Votre Panier</h3>';
-             let total = 0;
-             if (cart.length === 0) {{
-                 html += '<p class="text-gray-500 text-sm">Votre panier est vide.</p>';
-             }} else {{
-                 cart.forEach(item => {{
-                     html += '<div class="flex justify-between border-b py-2 text-sm"><span>' + item.name + '</span><span class="font-bold">' + item.price.toFixed(2) + '€</span></div>';
-                     total += item.price;
-                 }});
-             }}
-             html += '<div class="mt-4 font-bold text-lg">Total: ' + total.toFixed(2) + '€</div>';
-             html += '<button class="w-full mt-4 bg-black text-white py-2 rounded text-sm font-medium">Valider la commande</button>';
-             html += '<button onclick="toggleCart()" class="w-full mt-2 text-xs text-gray-400 hover:text-black">Fermer le panier</button>';
-             container.innerHTML = html;
-         }}
-         function toggleCart() {{
-             const sidebar = document.getElementById('cart-sidebar');
-             if (sidebar) sidebar.classList.toggle('hidden');
-         }}
-         document.getElementById('cart-btn')?.addEventListener('click', toggleCart);
-         </script>
+    5. STRUCTURE DE CHAQUE CARTE PRODUIT :
+       Chaque produit généré doit être encapsulé dans une div avec la classe `product-card group relative flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm p-4`.
+       À l'intérieur, il doit y avoir obligatoirement les éléments avec les classes suivantes :
+       - La balise image : `class="product-img ..."`
+       - Le titre du produit : `class="product-name ..."`
+       - Le prix écrit : `class="product-price ..."`
+       - Le bouton d'ajout : `<button onclick="addToCart(this)" class="...">Ajouter au panier</button>`
 
-    5. Ajoute ce script juste avant la fermeture du body pour activer le téléchargement :
+    6. LOGIQUE JAVASCRIPT EXACTE DU PANIER ET DU TÉLÉCHARGEMENT :
+       Inclus scrupuleusement ces fonctions de script avant la fermeture du body :
        <script>
+       let cart = [];
+       function toggleCart() {{
+           const drawer = document.getElementById('cart-drawer');
+           drawer.classList.toggle('translate-x-full');
+       }}
+       function addToCart(button) {{
+           const card = button.closest('.product-card');
+           const name = card.querySelector('.product-name').innerText;
+           const priceText = card.querySelector('.product-price').innerText;
+           const img = card.querySelector('.product-img').src;
+           const existingItem = cart.find(item => item.name === name);
+           if (existingItem) {{
+               existingItem.quantity += 1;
+           }} else {{
+               cart.push({{ name, price: priceText, img, quantity: 1 }});
+           }}
+           updateCartUI();
+           document.getElementById('cart-drawer').classList.remove('translate-x-full');
+       }}
+       function changeQuantity(index, delta) {{
+           cart[index].quantity += delta;
+           if (cart[index].quantity <= 0) {{ cart.splice(index, 1); }}
+           updateCartUI();
+       }}
+       function removeItem(index) {{
+           cart.splice(index, 1);
+           updateCartUI();
+       }}
+       function parsePrice(priceStr) {{
+           let clean = priceStr.replace(/[^0-9.,]/g, '');
+           if (clean.includes(',') && clean.includes('.')) {{ clean = clean.replace(/,/g, ''); }}
+           elif (clean.includes(',')) {{ clean = clean.replace(',', '.'); }}
+           return parseFloat(clean) || 0;
+       }}
+       function updateCartUI() {{
+           const itemsContainer = document.getElementById('cart-items');
+           const countBadge = document.getElementById('cart-count');
+           const totalContainer = document.getElementById('cart-total');
+           itemsContainer.innerHTML = '';
+           let totalPrice = 0;
+           let totalItems = 0;
+           cart.forEach((item, index) => {{
+               const numericPrice = parsePrice(item.price);
+               totalPrice += numericPrice * item.quantity;
+               totalItems += item.quantity;
+               itemsContainer.innerHTML += `
+                   <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                       <div class="flex items-center space-x-4">
+                           <img src="${{item.img}}" class="w-16 h-16 object-cover rounded-md bg-gray-100">
+                           <div>
+                               <h5 class="text-sm font-semibold text-gray-900">${{item.name}}</h5>
+                               <p class="text-xs text-gray-500">${{item.price}}</p>
+                               <div class="flex items-center space-x-2 mt-2">
+                                   <button onclick="changeQuantity(${{index}}, -1)" class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs font-bold hover:bg-gray-200">-</button>
+                                   <span class="text-xs font-medium">${{item.quantity}}</span>
+                                   <button onclick="changeQuantity(${{index}}, 1)" class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs font-bold hover:bg-gray-200">+</button>
+                               </div>
+                           </div>
+                       </div>
+                       <button onclick="removeItem(${{index}})" class="text-xs text-red-500 hover:text-red-700 underline">Enlever</button>
+                   </div>`;
+           }});
+           if (totalItems > 0) {{
+               countBadge.innerText = totalItems;
+               countBadge.classList.remove('hidden');
+           }} else {{
+               countBadge.classList.add('hidden');
+               itemsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Votre panier est vide.</p>';
+           }}
+           let currency = '€';
+           if (cart.length > 0 && cart[0].price.includes('$')) currency = '$';
+           totalContainer.innerText = totalPrice.toFixed(2).replace('.', ',') + ' ' + currency;
+       }}
+       function checkout() {{
+           if (cart.length === 0) {{ alert("Votre panier est vide !"); return; }}
+           fetch('/.netlify/functions/create-checkout', {{
+               method: 'POST',
+               headers: {{ 'Content-Type': 'application/json' }},
+               body: JSON.stringify({{ items: cart }}),
+           }})
+           .then(res => res.ok ? res.json() : res.json().then(json => Promise.reject(json)))
+           .then(({ url }) => {{ window.location = url; }})
+           .catch(e => {{ console.error(e); alert("Une erreur est survenue lors de la connexion avec Stripe."); }});
+       }}
+       
+       // Script pour le bouton de téléchargement local
        document.getElementById('download-site-btn')?.addEventListener('click', function(e) {{
            e.preventDefault();
            const blob = new Blob([document.documentElement.outerHTML], {{ type: 'text/html' }});
@@ -153,11 +213,8 @@ async def generate_store(theme: str = Form(...)):
            document.body.removeChild(a);
        }});
        </script>
-    6. Rends le design magnifique, immersif et épuré.
-
-    Renvoie UNIQUEMENT le code HTML complet commençant par <!DOCTYPE html>. Pas de balises markdown ```html.
     """
-    system_gamma = "Tu es un ingénieur Creative Front-End de génie, spécialisé dans les interfaces UI/UX minimalistes et le JavaScript fonctionnel sans images cassées."
+    system_gamma = "Tu es un ingénieur Creative Front-End de génie. Tu conçois des boutiques e-commerce élégantes avec une intégration de panier par classe et sélecteur JavaScript extrêmement précise."
     
     try:
         final_html = await call_mistral_agent_async(prompt_gamma, system_gamma)
@@ -167,27 +224,19 @@ async def generate_store(theme: str = Form(...)):
         print("🔧 Activation de l'Agent Delta...")
         
         prompt_delta = f"""
-        Tu es l'Agent Delta, un ingénieur QA et débugueur Senior d'élite. Ton rôle est d'analyser, de réparer et d'optimiser le code fourni.
-        Tu maîtrises à la perfection le HTML5, le CSS (Tailwind), le JavaScript (ES6+), le PHP 8+ et Python 3.
+        Tu es l'Agent Delta, un ingénieur QA et débugueur Senior d'élite. Tu dois nettoyer et valider le code HTML fourni.
+        Tu as l'interdiction absolue de supprimer ou de casser la logique du panier JavaScript (`cart`, `addToCart`, `updateCartUI`, `checkout` relié aux netlify functions) ou le fonctionnement du bouton de téléchargement local ('download-site-btn').
         
-        CRITIQUE POUR L'ALIGNEMENT DU DESIGN ET LE PANIER :
-        Vérifie impérativement que les deux boutons ('cart-btn' et 'download-site-btn') coexistent côte à côte dans la barre de navigation à l'intérieur d'un conteneur flex (`flex items-center gap-4`), et qu'aucun ne masque l'autre.
-        Vérifie que la structure du panier comprend bien la div 'cart-items-container' et que les boutons de produits utilisent le système de dataset sécurisé `this.getAttribute('data-name')`.
-        Vérifie que la ligne du CDN Tailwind est présente dans le <head> : <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>.
+        Vérifie que :
+        1. Le bouton de téléchargement id "download-site-btn" et l'icône du panier coexistent harmonieusement dans la barre de navigation.
+        2. Le script JavaScript complet du panier et de redirection Stripe est conservé à 100%.
         
-        Inspecte le code ci-dessous et effectue les corrections nécessaires :
-        1. Répare les balises HTML mal fermées ou manquantes.
-        2. Assure-toi que les classes Tailwind CSS sont bien orthographiées.
-        3. Corrige les erreurs de syntaxe JavaScript (fonctions mal fermées, accolades manquantes).
-        4. Si des structures logiques ressemblant à du PHP ou du Python s'y trouvent, assure-toi qu'elles respectent scrupuleusement leur syntaxe.
-        5. Interdiction absolue de supprimer ou casser le mécanisme du panier d'achat ou du bouton de téléchargement ('download-site-btn').
-        
-        Voici le code source à analyser et réparer :
+        Voici le code source à valider :
         {final_html}
         
-        Renvoie UNIQUEMENT le code corrigé final, sans fioritures, sans explications et sans bloc de code Markdown (pas de ```).
+        Renvoie uniquement le code HTML final corrigé, sans bloc markdown (pas de ```).
         """
-        system_delta = "Tu es un compilateur humain et un expert en refactoring de code. Tu répares le HTML, CSS, JS, PHP et Python sans jamais altérer les fonctionnalités interactives demandées."
+        system_delta = "Tu es un compilateur humain et un expert en refactoring. Tu renvoies le code HTML brut de manière ultra-sécurisée."
         
         final_html = await call_mistral_agent_async(prompt_delta, system_delta)
         final_html = final_html.replace("```html", "").replace("```", "").strip()
