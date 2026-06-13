@@ -4,21 +4,20 @@ import httpx
 from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware  # AJOUT SÉCURITÉ CORS
+from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 
 app = FastAPI()
 
-# CONFIGURATION SÉCURITÉ CORS POUR AUTORISER GITHUB PAGES
+# SÉCURITÉ CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Autorise ton GitHub Pages à communiquer avec Render
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Configuration du dossier pour stocker la boutique finale
 os.makedirs("theme", exist_ok=True)
 app.mount("/static", StaticFiles(directory="theme"), name="static")
 
@@ -31,7 +30,6 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "lz1MXg4YkGe2jzd1wdHeFoXMYWJmexYn")
 MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions"
 MODEL_NAME = "mistral-small-latest"
-THEME_PATH = os.path.join("theme", "index.html")
 
 async def call_mistral_agent_async(prompt: str, system_instruction: str) -> str:
     headers = {
@@ -44,7 +42,7 @@ async def call_mistral_agent_async(prompt: str, system_instruction: str) -> str:
             {"role": "system", "content": system_instruction},
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.85
+        "temperature": 0.15  # Température très basse pour une correction chirurgicale et ultra-précise
     }
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(MISTRAL_URL, json=payload, headers=headers)
@@ -60,21 +58,15 @@ async def read_index():
         return f.read()
 
 
-@app.get("/register", response_class=HTMLResponse)
-async def get_register_page():
-    if not os.path.exists("register.html"):
-        return HTMLResponse(content="<h1>Erreur : register.html introuvable !</h1>", status_code=404)
-    with open("register.html", "r", encoding="utf-8") as f:
-        return f.read()
-
-
 @app.post("/generate")
 async def generate_store(theme: str = Form(...)):
     try:
+        # 1. AGENT ALPHA : Marketing
         prompt_alpha = f"Donne un nom de marque, un slogan et un paragraphe d'accueil captivant pour une boutique sur le thème : {theme}. Réponds en JSON pur avec les clés 'nom', 'slogan', 'accueil'."
         system_alpha = "Tu es l'Agent Alpha, expert en marketing e-commerce. Tu réponds UNIQUEMENT en JSON pur sans balises Markdown."
         res_alpha_raw = await call_mistral_agent_async(prompt_alpha, system_alpha)
         
+        # 2. AGENT BETA : Merchandising
         prompt_beta = f"Génère une liste de 3 produits parfaits pour le thème : {theme}. Donne un nom, un prix et une courte description. Réponds en JSON pur (une liste d'objets) sans balises Markdown."
         system_beta = "Tu es l'Agent Beta, expert en merchandising. Tu réponds UNIQUEMENT en JSON pur sans balises Markdown."
         res_beta_raw = await call_mistral_agent_async(prompt_beta, system_beta)
@@ -86,8 +78,9 @@ async def generate_store(theme: str = Form(...)):
         products_data = json.loads(clean_beta)
         
     except Exception as e:
-        return JSONResponse(content={"error": "Échec lors du parsing IA", "details": str(e)}, status_code=500)
+        return JSONResponse(content={"error": "Échec lors du parsing IA des données de base", "details": str(e)}, status_code=500)
 
+    # 3. AGENT GAMMA : Développeur Front-End
     prompt_gamma = f"""
     Tu es un ingénieur Creative Front-End Senior. Tu dois concevoir un site e-commerce complet, ultra-moderne, premium et entièrement codé dans un seul fichier (index.html) pour la boutique "{brand_data.get('nom')}" basée sur la thématique spécifique : "{theme}".
     
@@ -96,57 +89,62 @@ async def generate_store(theme: str = Form(...)):
     - Message d'accueil : {brand_data.get('accueil')}
     - Les produits suivants : {json.dumps(products_data)}
     
-    CONSIGNES D'ARCHITECTURE HTML ET DE DESIGN :
+    CONSIGNES :
     1. Inclus Tailwind CSS : <script src="https://cdn.tailwindcss.com"></script>
-    2. Inclus la balise <script src="https://js.stripe.com/v3/"></script> dans le <head>.
-    
-    3. FONCTIONNALITÉ COMPTE CONNECTÉ (OBLIGATOIRE) :
-       - Inclus Supabase dans le <head> : <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-       - Dans le menu de navigation (Navbar) du site généré, crée une zone visible avec l'id "user-profile-zone".
-       - Ajoute un script en bas de page pour initialiser Supabase avec ces coordonnées EXACTES :
-         URL : "{SUPABASE_URL}"
-         KEY : "{SUPABASE_KEY}"
-       - Ce script doit vérifier la session avec `supabase.auth.getUser()`. Si un utilisateur est connecté, remplace immédiatement le contenu de "user-profile-zone" par un badge stylisé affichant son adresse e-mail (ex: "👤 email@domaine.com") parfaitement intégré dans le thème graphique de la boutique.
-    
-    4. BOUTON PANIER ET TÉLÉCHARGEMENT CÔTE À CÔTE (CRITIQUE) :
-       - Dans ta barre de navigation (Navbar), tu dois placer le bouton du Panier (Shopping Cart).
-       - Juste à côté de ce bouton Panier, tu DOIS ajouter un bouton de téléchargement premium stylisé selon ton thème (avec une icône de téléchargement ou un texte clair comme "📥 Télécharger le site").
-       - Ce bouton doit avoir l'id exact : "download-site-btn".
-       - Ajoute obligatoirement ce script JavaScript tout à la fin du fichier avant la balise de fermeture </body> pour faire fonctionner le téléchargement :
-         <script>
-         document.getElementById('download-site-btn')?.addEventListener('click', function(e) {{
-             e.preventDefault();
-             const htmlContent = document.documentElement.outerHTML;
-             const blob = new Blob([htmlContent], {{ type: 'text/html' }});
-             const url = URL.createObjectURL(blob);
-             const a = document.createElement('a');
-             a.href = url;
-             a.download = 'ma_boutique.html';
-             document.body.appendChild(a);
-             a.click();
-             document.body.removeChild(a);
-             URL.revokeObjectURL(url);
-         }});
-         </script>
-
-    5. Ne fais JAMAIS une structure classique en blocs empilés basiques. Crée une mise en page asymétrique et immersive adaptée à la thématique "{theme}".
-    6. Choisis une palette de couleurs digne d'un grand studio : des dégradés subtils, des effets de flou et de transparence haut de gamme (backdrop-blur-md), et des typographies soignées.
-    7. Pas d'images vides brutes : remplace les visuels des produits par des conteneurs <div> artistiques avec des dégradés abstraits ou des icônes minimalistes.
-    8. Inclus un système de panier d'achat interactif codé proprement en JavaScript (panneau coulissant ou modal).
+    2. Dans la Navbar, ajoute un bouton avec l'id exact "download-site-btn" pour télécharger le site.
+    3. Ajoute ce script juste avant la fermeture du body pour activer le téléchargement :
+       <script>
+       document.getElementById('download-site-btn')?.addEventListener('click', function(e) {{
+           e.preventDefault();
+           const blob = new Blob([document.documentElement.outerHTML], {{ type: 'text/html' }});
+           const url = URL.createObjectURL(blob);
+           const a = document.createElement('a');
+           a.href = url;
+           a.download = 'ma_boutique.html';
+           document.body.appendChild(a);
+           a.click();
+           document.body.removeChild(a);
+       }});
+       </script>
+    4. Rends le design magnifique, immersif et asymétrique. Pas de blocs basiques.
 
     Renvoie UNIQUEMENT le code HTML complet commençant par <!DOCTYPE html>. Pas de balises markdown ```html.
     """
-    system_gamma = "Tu es un ingénieur Creative Front-End de génie, spécialisé dans les interfaces UI/UX minimalistes, fluides et ultra-modernes."
+    system_gamma = "Tu es un ingénieur Creative Front-End de génie, spécialisé dans les interfaces UI/UX minimalistes."
     
     try:
         final_html = await call_mistral_agent_async(prompt_gamma, system_gamma)
         final_html = final_html.replace("```html", "").replace("```", "").strip()
 
-        # Retourne directement le code HTML généré pour qu'index.html puisse l'injecter sur l'écran
+        # --- RE-VÉRIFICATION ET NETTOYAGE SYSTÉMATIQUE PAR L'AGENT DELTA ---
+        print("🔧 Activation de l'Agent Delta : Analyse et sécurisation multi-langages...")
+        
+        prompt_delta = f"""
+        Tu es l'Agent Delta, un ingénieur QA et débugueur Senior d'élite. Ton rôle est d'analyser, de réparer et d'optimiser le code fourni.
+        Tu maîtrises à la perfection le HTML5, le CSS (Tailwind), le JavaScript (ES6+), le PHP 8+ et Python 3.
+        
+        Inspecte le code ci-dessous et effectue les corrections suivantes si nécessaire :
+        1. Répare les balises HTML mal fermées ou manquantes.
+        2. Assure-toi que le CSS Tailwind est correctement interprété.
+        3. Corrige les erreurs de syntaxe JavaScript (promesses, accolades manquantes, variables indéfinies).
+        4. Si des structures logiques ressemblant à du PHP ou du Python s'y trouvent, assure-toi qu'elles respectent scrupuleusement la syntaxe de leurs langages respectifs (indentation pour Python, balises <?php ?> et points-virgules pour PHP).
+        5. Interdiction absolue de casser ou supprimer le script du bouton de téléchargement ('download-site-btn').
+        
+        Voici le code source à analyser et réparer :
+        {final_html}
+        
+        Renvoie UNIQUEMENT le code corrigé final, sans fioritures, sans explications et sans bloc de code Markdown (pas de ```).
+        """
+        system_delta = "Tu es un compilateur humain et un expert en refactoring de code. Tu répares le HTML, CSS, JS, PHP et Python sans jamais modifier le comportement attendu de l'application."
+        
+        # L'agent Delta nettoie systématiquement le code avant l'affichage pour garantir zéro bug
+        final_html = await call_mistral_agent_async(prompt_delta, system_delta)
+        final_html = final_html.replace("```html", "").replace("```", "").strip()
+
         return HTMLResponse(content=final_html, status_code=200)
         
     except Exception as e:
-        return JSONResponse(content={"error": f"Erreur lors de la génération par Gamma : {str(e)}"}, status_code=500)
+        return JSONResponse(content={"error": f"Erreur critique lors de la réparation. Détails : {str(e)}"}, status_code=500)
 
 
 if __name__ == "__main__":
