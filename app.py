@@ -71,8 +71,7 @@ async def generate_store(theme: str = Form(...)):
         system_beta = "Tu es l'Agent Beta, expert en merchandising. Tu réponds UNIQUEMENT en JSON pur sans balises Markdown."
         res_beta_raw = await call_mistral_agent_async(prompt_beta, system_beta)
 
-        clean_alpha = res_alpha_raw.replace("```json", "").replace("
-```", "").strip()
+        clean_alpha = res_alpha_raw.replace("```json", "").replace("```", "").strip()
         clean_beta = res_beta_raw.replace("```json", "").replace("```", "").strip()
 
         brand_data = json.loads(clean_alpha)
@@ -81,7 +80,7 @@ async def generate_store(theme: str = Form(...)):
     except Exception as e:
         return JSONResponse(content={"error": "Échec lors du parsing IA des données de base", "details": str(e)}, status_code=500)
 
-    # 3. AGENT GAMMA : Développeur Front-End (Avec instructions du panier d'achat)
+    # 3. AGENT GAMMA : Développeur Front-End (Avec instructions strictes pour la liaison du Panier)
     prompt_gamma = f"""
     Tu es un ingénieur Creative Front-End Senior. Tu dois concevoir un site e-commerce complet, ultra-moderne, premium et entièrement codé dans un seul fichier (index.html) pour la boutique "{brand_data.get('nom')}" basée sur la thématique spécifique : "{theme}".
     
@@ -92,11 +91,18 @@ async def generate_store(theme: str = Form(...)):
     
     CONSIGNES STRICTES POUR LE PANIER, LE DESIGN ET LE TÉLÉCHARGEMENT :
     1. Inclus Tailwind CSS : <script src="https://cdn.tailwindcss.com"></script>
-    2. CONSTRUIS UN PANIER D'ACHAT INTERACTIF EN JAVASCRIPT :
-       - Dans la Navbar, ajoute un bouton Panier bien visible avec un emoji caddie et un compteur de produits (ex: 🛒 Panier (0)).
-       - Crée une fenêtre de panier (un volet latéral coulissant ou une boîte modale bien stylisée, masquée par défaut).
-       - Chaque produit affiché doit posséder un bouton fonctionnel "Ajouter au panier".
-       - Écris le script JavaScript complet pour gérer ce panier : incrémentation du compteur au clic, liste des articles ajoutés à l'intérieur du volet, calcul automatique du prix total, et un bouton "Valider la commande".
+    
+    2. CONSTRUIS UN PANIER D'ACHAT INTERACTIF EN JAVASCRIPT (SANS ERREUR DE LOGIQUE) :
+       - Dans la Navbar, ajoute un bouton Panier avec l'id exact "cart-btn" qui affiche un emoji caddie et un compteur (ex: 🛒 Panier (<span id="cart-count">0</span>)).
+       - Crée un volet latéral coulissant pour le panier avec l'id exact "cart-sidebar" (masqué par défaut avec la classe Tailwind "hidden" ou "translate-x-full"). Ajoute un bouton à l'intérieur pour le fermer.
+       - Chaque bouton de produit doit impérativement avoir l'attribut exact : onclick="addToCart('Nom du Produit', Prix)" avec le vrai nom et le vrai prix du produit.
+       - Crée un script JavaScript global avec un tableau `let cart = [];` et la fonction exacte `function addToCart(name, price)` qui :
+         1. Ajoute le produit au tableau cart.
+         2. Incrémente le texte de `id="cart-count"`.
+         3. Met à jour la liste HTML des éléments à l'intérieur de `id="cart-sidebar"` pour afficher les articles ajoutés.
+         4. Calcule et affiche le total cumulé.
+       - Écris le script JavaScript pour que le clic sur `id="cart-btn"` ouvre le panier en manipulant sa classe (retirer "hidden"), et que le bouton de fermeture le masque à nouveau.
+
     3. Dans la Navbar, ajoute un bouton avec l'id exact "download-site-btn" pour télécharger le site.
     4. Ajoute ce script juste avant la fermeture du body pour activer le téléchargement :
        <script>
@@ -116,14 +122,13 @@ async def generate_store(theme: str = Form(...)):
 
     Renvoie UNIQUEMENT le code HTML complet commençant par <!DOCTYPE html>. Pas de balises markdown ```html.
     """
-    system_gamma = "Tu es un ingénieur Creative Front-End de génie, spécialisé dans les interfaces UI/UX minimalistes et le JavaScript fonctionnel."
+    system_gamma = "Tu es un ingénieur Creative Front-End de génie, spécialisé dans les interfaces UI/UX minimalistes et le JavaScript fonctionnel interconnecté."
     
     try:
         final_html = await call_mistral_agent_async(prompt_gamma, system_gamma)
-        final_html = final_html.replace("
-```html", "").replace("```", "").strip()
+        final_html = final_html.replace("```html", "").replace("```", "").strip()
 
-        # --- 4. AGENT DELTA : Super-Débugueur Polyglotte (Analyse systématique) ---
+        # --- 4. AGENT DELTA : Super-Débugueur Polyglotte (Analyse de la liaison) ---
         print("🔧 Activation de l'Agent Delta : Analyse et sécurisation multi-langages (HTML, CSS, JS, PHP, Python)...")
         
         prompt_delta = f"""
@@ -132,26 +137,27 @@ async def generate_store(theme: str = Form(...)):
         
         CRITIQUE POUR LE DESIGN ET LE PANIER :
         Tu DOIS impérativement vérifier que la ligne du CDN Tailwind est présente dans le <head> : <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>.
-        Assure-toi que les scripts du panier d'achat interactif et du bouton de téléchargement ('download-site-btn') ne contiennent aucune erreur de syntaxe JS (accolades, parenthèses ou variables brisées).
+        
+        VÉRIFICATION DU PANIER :
+        Assure-toi que chaque bouton de produit possède bien l'attribut 'onclick="addToCart(...)"' et que la fonction correspondante 'function addToCart(name, price)' est présente, complète et fonctionnelle dans le JavaScript. Si les noms de fonctions ou les IDs de concordance ne correspondent pas, renomme-les pour qu'ils soient strictement identiques et fonctionnels au clic.
         
         Inspecte le code ci-dessous et effectue les corrections nécessaires :
         1. Répare les balises HTML mal fermées ou manquantes.
         2. Assure-toi que les classes Tailwind CSS sont bien orthographiées.
-        3. Corrige les erreurs de syntaxe JavaScript (promesses, fonctions mal fermées).
+        3. Corrige les erreurs de syntaxe JavaScript (promesses, fonctions mal fermées, accolades manquantes).
         4. Si des structures logiques ressemblant à du PHP ou du Python s'y trouvent, assure-toi qu'elles respectent scrupuleusement leur syntaxe (indentation pour Python, balises <?php ?> et points-virgules pour PHP).
-        5. Interdiction absolue de supprimer ou casser le mécanisme du panier d'achat ou du bouton de téléchargement.
+        5. Interdiction absolue de supprimer ou casser le mécanisme du panier d'achat ou du bouton de téléchargement ('download-site-btn').
         
         Voici le code source à analyser et réparer :
         {final_html}
         
         Renvoie UNIQUEMENT le code corrigé final, sans fioritures, sans explications et sans bloc de code Markdown (pas de ```).
         """
-        system_delta = "Tu es un compilateur humain et un expert en refactoring de code. Tu répares le HTML, CSS, JS, PHP et Python sans jamais altérer les fonctionnalités demandées."
+        system_delta = "Tu es un compilateur humain et un expert en refactoring de code. Tu répares le HTML, CSS, JS, PHP et Python sans jamais altérer les fonctionnalités interactives demandées."
         
         # L'agent Delta nettoie le code généré avant l'affichage pour garantir zéro bug
         final_html = await call_mistral_agent_async(prompt_delta, system_delta)
-        final_html = final_html.replace("
-```html", "").replace("```", "").strip()
+        final_html = final_html.replace("```html", "").replace("```", "").strip()
 
         return HTMLResponse(content=final_html, status_code=200)
         
